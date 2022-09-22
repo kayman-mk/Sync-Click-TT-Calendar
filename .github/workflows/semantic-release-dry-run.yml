@@ -1,7 +1,7 @@
 ---
 name: Release Test
 
-on:
+on: # yamllint disable-line rule:truthy
   push:
     branches:
       - release-dry-run
