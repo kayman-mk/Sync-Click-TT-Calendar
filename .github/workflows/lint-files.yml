@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Validate YAML file
-        run: find . \( -name "*.yml" -o -name "*.yaml" \) | xargs yamllint -c .yamllint.yml
+        run: find . \( -name "*.yml" -o -name "*.yaml" \) | xargs yamllint -c .yamllint.yml --strict
