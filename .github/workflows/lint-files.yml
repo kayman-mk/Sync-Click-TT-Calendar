@@ -1,0 +1,12 @@
+name: "Lint/Validate files"
+
+on:
+  pull_request:
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Validate YAML file
+        run: find . -name "*.yml" | xargs -n 1 yamllint 
