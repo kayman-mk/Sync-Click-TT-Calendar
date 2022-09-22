@@ -8,7 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: check
-        run: yamllint -v
       - name: Validate YAML file
-        run: find . \( -name "*.yml" -o -name "*.yaml" \) | xargs yamllint
+        run: find . \( -name "*.yml" -o -name "*.yaml" \) | xargs yamllint -c .yamllint.yml
