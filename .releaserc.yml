@@ -19,7 +19,6 @@ verifyConditions:
   - '@semantic-release/git'
   - '@semantic-release/github'
   - '@semantic-release/changelog'
-  - 'semantic-release-maven'
 
 analyzeCommits:
   - path: "@semantic-release/commit-analyzer"
