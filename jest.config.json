@@ -1,0 +1,6 @@
+{
+  "collectCoverage": true,
+  "coverageDirectory": "target/coverage",
+  "coverageProvider": "v8",
+  "testMatch": ["**/tests/**/*.spec.ts"]
+}
