@@ -1,0 +1,26 @@
+{
+  "name": "sync-click-tt-calendar",
+  "version": "1.0.0",
+  "description": "Sync your WebDav calendar with appointments from Click-TT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kayman-mk/Sync-Click-TT-Calendar.git"
+  },
+  "keywords": [
+    "click-tt",
+    "calendar"
+  ],
+  "author": "Matthias Kay",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/kayman-mk/Sync-Click-TT-Calendar/issues"
+  },
+  "homepage": "https://github.com/kayman-mk/Sync-Click-TT-Calendar#readme",
+  "devDependencies": {
+    "typescript": "^4.8.3"
+  }
+}
