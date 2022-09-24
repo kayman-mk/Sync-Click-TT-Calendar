@@ -6,17 +6,18 @@ import { DefaultUnitOfWork, UnitOfWork } from '../UnitOfWork';
 export class CommandLineInterface {
   main() {
     const args = yargs.options({
-      's': {
-        alias: 'click-tt-url',
-        default: 'https://ttvn.click-tt.de/',
+      'f': {
+        alias: 'file',
         demandOption: true,
-        description: 'URL of the Click-TT instance to use.',
+        description: 'CSV file with all appointments',
         type: 'string'
       }
     }).argv;
 
-    // FIXME should read `args.s`
-    let configuration: Configuration = new Configuration('https://ttvn.click-tt.de/');
+    // FIXME should read `args.f`
+    let configuration: Configuration = new Configuration('/temp/Vereinsspielplan_20220922150454.csv');
     let unitOfWork: UnitOfWork = new DefaultUnitOfWork(configuration);
+
+    unitOfWork.syncCalendarApplicationService.syncCalendar();
   }
 }

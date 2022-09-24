@@ -1,6 +1,6 @@
 export class Configuration {
     /**
-     * @param clickTTUrl the URL of the Click-TT instance to download the appointments from
+     * @param clickTtAppointmentFilename the name of the CSV file containing the appointments from Click-TT
      */
-    constructor(readonly clickTTUrl: String) {}
+    constructor(readonly clickTtAppointmentFilename: String) {}
 }

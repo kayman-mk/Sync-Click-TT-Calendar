@@ -1,15 +1,16 @@
 import { SyncCalendarApplicationService as SyncCalendarApplicationService } from "../application/SyncCalendarApplicationService";
-import { ClickTTService } from "../domain/service/ClickTTService";
+import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { Configuration } from "./Configuration";
-import { ClickTTServiceImpl } from "./endpoint/service/ClickTTServiceImpl";
+import { AppointmentParserServiceImpl } from "./endpoint/service/AppointmentParserServiceImpl";
 import { Logger } from "./Logger";
 
 export abstract class UnitOfWork {
-    constructor(readonly clickTTService: ClickTTService, readonly syncCalendarApplicationService: SyncCalendarApplicationService, readonly configuration: Configuration, readonly logger: Logger) {}
+    constructor(readonly appointmentParserService: AppointmentParserService, readonly syncCalendarApplicationService: SyncCalendarApplicationService, readonly configuration: Configuration, readonly logger: Logger) {}
 }
 
 export class DefaultUnitOfWork extends UnitOfWork {
     constructor(configuration: Configuration) {
-        super(new ClickTTServiceImpl(configuration), new SyncCalendarApplicationService(), configuration, new Logger(configuration));
+        const appointmentParser = new AppointmentParserServiceImpl(configuration);
+        super(appointmentParser, new SyncCalendarApplicationService(appointmentParser), configuration, new Logger(configuration));
     }
 }

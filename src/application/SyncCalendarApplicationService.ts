@@ -1,6 +1,13 @@
+import { Configuration } from "../adapter/Configuration";
+import { UnitOfWork } from "../adapter/UnitOfWork";
+import { AppointmentParserService } from "../domain/service/AppointmentParserService";
+
 export class SyncCalendarApplicationService {
+    constructor(readonly appointmentParserService: AppointmentParserService) {}
+
     syncCalendar() {
-        // download from Click-TT
+        // parsing ClickTT CSV file
+        this.appointmentParserService.parseAppointments();
 
         // download Calendar Items
 
