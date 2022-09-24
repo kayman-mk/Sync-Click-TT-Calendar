@@ -8,7 +8,8 @@ export class Logger {
         this.logger = winston.createLogger({
             transports: [
                 new winston.transports.Console(),
-            ]
+            ],
+            
         });
     }
 }
