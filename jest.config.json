@@ -2,5 +2,10 @@
   "collectCoverage": true,
   "coverageDirectory": "target/coverage",
   "coverageProvider": "v8",
-  "testMatch": ["**/tests/**/*.spec.ts"]
+  "testMatch": [
+    "**/tests/**/*.spec.ts"
+  ],
+  "transform": {
+    "^.+\\.tsx?$": "ts-jest"
+  }
 }
