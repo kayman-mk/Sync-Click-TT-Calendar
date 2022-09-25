@@ -1,7 +1,7 @@
 import { SyncCalendarApplicationService as SyncCalendarApplicationService } from "../application/SyncCalendarApplicationService";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { Configuration } from "./Configuration";
-import { ClickTtCsvFileAppointmentParserServiceImpl } from "./endpoint/service/ClickTtCsvFileAppointmentParserServiceImpl";
+import { ClickTtCsvFileAppointmentParserServiceImpl } from "./service/ClickTtCsvFileAppointmentParserServiceImpl";
 import { Logger } from "./Logger";
 
 export abstract class UnitOfWork {
