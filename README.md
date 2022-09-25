@@ -22,6 +22,8 @@ node index.ts
 
 ## Credits
 - [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
+- [InversifyJS](https://github.com/inversify/InversifyJS) - for dependency injection
 - [Js-Joda](https://github.com/js-joda/js-joda) - for date/time handling
+- [Reflect-Metadata](https://github.com/rbuckton/reflect-metadata) - for dependency injection
 - [Winston](https://github.com/winstonjs/winston) - for logging
 - [Yargs](https://github.com/yargs/yargs) - a parser for command lines
