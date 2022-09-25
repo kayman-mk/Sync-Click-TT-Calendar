@@ -7,9 +7,10 @@ import { AppointmentParserService } from "../domain/service/AppointmentParserSer
 export class SyncCalendarApplicationService {
     constructor(@inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService) {}
 
-    syncCalendar() {
+    async syncCalendar() {
         // parsing ClickTT CSV file
-        this.appointmentParserService.parseAppointments();
+       this.appointmentParserService.parseAppointments();
+       
         // download Calendar Items
 
         // for each calendar item --> check against Click-TT appointment and do the action
