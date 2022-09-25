@@ -19,3 +19,9 @@ node index.ts
 2. download all Click-TT related events from your calendar
 3. determine the necessary actions: update, delete, create of appointments
 4. execute the actions
+
+## Credits
+- [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
+- [Js-Joda](https://github.com/js-joda/js-joda) - for date/time handling
+- [Winston](https://github.com/winstonjs/winston) - for logging
+- [Yargs](https://github.com/yargs/yargs) - a parser for command lines
