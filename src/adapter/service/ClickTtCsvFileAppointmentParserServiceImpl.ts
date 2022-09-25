@@ -11,17 +11,23 @@ import { Logger } from '../Logger';
 export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentParserService {
     constructor(@inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger, @inject(SERVICE_IDENTIFIER.Configuration) readonly configuration: Configuration) { }
 
-    parseAppointments(): Set<Appointment> {
-        const results: Set<Appointment> = new Set();
+    async parseAppointments(): Promise<Set<Appointment>> {
+        const appointments: Set<Appointment> = new Set();
 
-        fs.createReadStream(`${this.configuration.clickTtAppointmentFilename}`)
-            .pipe(csv({ separator: ';' }))
-            .on('data', (data) => {
-                results.add(AppointmentFactory.createFromClickTTCsv(data));
-            });
+        return new Promise((resolve, reject) => {
+            fs.createReadStream(`${this.configuration.clickTtAppointmentFilename}`)
+                .pipe(csv({ separator: ';' }))
+                .on('data', (data) => {
+                    appointments.add(AppointmentFactory.createFromClickTTCsv(data));
+                })
+                .on('end', () => {
+                    this.logger.info("Found " + appointments.size + " appointments in CSV file.");
 
-        this.logger.info("Found " + results.size + " appointments in CSV file.");
-
-        return results;
+                    resolve(appointments)
+                })
+                .on('error', (err) => {
+                    return reject(err);
+                });
+        })
     }
 }
