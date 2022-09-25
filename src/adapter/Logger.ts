@@ -1,11 +1,14 @@
 
+import { inject, injectable } from 'inversify';
 import winston, { format } from 'winston';
+import SERVICE_IDENTIFIER from '../dependency_injection';
 import { Configuration } from "./Configuration";
 
+@injectable()
 export class Logger {
     private logger: winston.Logger;
 
-    constructor(configuration: Configuration) {
+    constructor(@inject(SERVICE_IDENTIFIER.Configuration) configuration: Configuration) {
         this.logger = winston.createLogger({
             format: format.combine(format.errors({ stack: true }), format.timestamp(), format.prettyPrint()),
             level: 'info',

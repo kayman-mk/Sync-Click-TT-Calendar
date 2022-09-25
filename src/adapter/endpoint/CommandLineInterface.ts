@@ -1,7 +1,10 @@
+import "reflect-metadata";
+
 import * as yargs from 'yargs';
+import { SyncCalendarApplicationService } from "../../application/SyncCalendarApplicationService";
+import SERVICE_IDENTIFIER from "../../dependency_injection";
 import { Configuration } from '../Configuration';
-import { Logger } from '../Logger';
-import { DefaultUnitOfWork, UnitOfWork } from '../UnitOfWork';
+import container from "../container";
 
 export class CommandLineInterface {
   main() {
@@ -16,8 +19,8 @@ export class CommandLineInterface {
 
     // FIXME should read `args.f`
     let configuration: Configuration = new Configuration('/temp/Vereinsspielplan_20220922150454.csv');
-    let unitOfWork: UnitOfWork = new DefaultUnitOfWork(configuration);
+    container.bind<Configuration>(SERVICE_IDENTIFIER.Configuration).toConstantValue(configuration);
 
-    unitOfWork.syncCalendarApplicationService.syncCalendar();
+    container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar();
   }
 }
