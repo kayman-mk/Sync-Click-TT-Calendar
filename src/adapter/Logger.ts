@@ -1,8 +1,7 @@
 
 import { inject, injectable } from 'inversify';
 import winston, { format } from 'winston';
-import SERVICE_IDENTIFIER from '../dependency_injection';
-import { Configuration } from "./Configuration";
+import { SERVICE_IDENTIFIER }from '../dependency_injection';
 
 @injectable()
 export class Logger {
