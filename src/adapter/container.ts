@@ -1,8 +1,7 @@
 import { Container } from "inversify";
 
-import SERVICE_IDENTIFIER from "../dependency_injection";
+import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { Logger } from "./Logger";
-import { Configuration } from "./Configuration";
 import { SyncCalendarApplicationService } from "../application/SyncCalendarApplicationService";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { ClickTtCsvFileAppointmentParserServiceImpl } from "./service/ClickTtCsvFileAppointmentParserServiceImpl";

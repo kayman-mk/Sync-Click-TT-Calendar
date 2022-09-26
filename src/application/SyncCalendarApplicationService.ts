@@ -1,15 +1,14 @@
 import { inject, injectable } from "inversify";
-import { Logger } from "../adapter/Logger";
-import SERVICE_IDENTIFIER from "../dependency_injection";
+import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 
 @injectable()
 export class SyncCalendarApplicationService {
     constructor(@inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService) {}
 
-    async syncCalendar() {
+    async syncCalendar(appointmentFilename: string) {
         // parsing ClickTT CSV file
-       this.appointmentParserService.parseAppointments();
+       this.appointmentParserService.parseAppointments(appointmentFilename);
        
         // download Calendar Items
 
