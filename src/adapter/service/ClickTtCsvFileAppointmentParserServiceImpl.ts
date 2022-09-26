@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import SERVICE_IDENTIFIER from '../../dependency_injection';
 import { Logger } from '../Logger';
 import { FileStorageService } from '../../domain/service/FileStorageService';
+import { Readable } from 'stream';
 
 @injectable()
 export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentParserService {
@@ -16,7 +17,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
         const appointments: Set<Appointment> = new Set();
 
         return new Promise((resolve, reject) => {
-            this.fileStorageService.readFile(`${this.configuration.clickTtAppointmentFilename}`)
+            Readable.from(this.fileStorageService.readFile(`${this.configuration.clickTtAppointmentFilename}`))
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data) => {
                     appointments.add(AppointmentFactory.createFromClickTTCsv(data));
