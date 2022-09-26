@@ -2,6 +2,7 @@
   "collectCoverage": true,
   "coverageDirectory": "target/coverage",
   "coverageProvider": "v8",
+  "setupFilesAfterEnv": ["<rootDir>/tests/jest.setup.ts"],
   "testMatch": [
     "**/tests/**/*.spec.ts"
   ],
