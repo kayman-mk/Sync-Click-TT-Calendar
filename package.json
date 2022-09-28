@@ -37,6 +37,7 @@
     "csv-parser": "^3.0.0",
     "inversify": "^6.0.1",
     "reflect-metadata": "^0.1.13",
+    "tsdav": "^2.0.3",
     "winston": "^3.8.2",
     "yargs": "^17.5.1"
   }
