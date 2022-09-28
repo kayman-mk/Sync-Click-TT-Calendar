@@ -8,6 +8,6 @@ export class AppointmentFactory {
     static create(localTeam: string, foreignTeam: string, startDateTime: string): Appointment {
         const formatter = DateTimeFormatter.ofPattern('dd.MM.yyyy HH:mm');
 
-        return new Appointment("${localTeam} - ${foreignTeam}", LocalDateTime.parse(startDateTime, formatter));
+        return new Appointment(localTeam + " - " + foreignTeam, LocalDateTime.parse(startDateTime, formatter));
     }
 }

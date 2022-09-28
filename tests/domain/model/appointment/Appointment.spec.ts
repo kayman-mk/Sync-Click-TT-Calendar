@@ -1,6 +1,6 @@
 import {Appointment, AppointmentFactory} from "../../../../src/domain/model/appointment/Appointment";
 
-describe('Create Appointment Factory', () => {
+describe('Appointment Factory', () => {
     it('should have a title equal to "local - foreign" team name', () => {
         // when
         const actualAppointment: Appointment = AppointmentFactory.create('local', 'remote', '01.01.1970 00:00');
@@ -14,6 +14,6 @@ describe('Create Appointment Factory', () => {
         const actualAppointment: Appointment = AppointmentFactory.create('local', 'remote', '01.01.1970 00:00');
 
         // then
-        expect(actualAppointment.startDateTime.toEpochSecond).toEqual(7);
+        expect(actualAppointment.startDateTime.toString()).toEqual('1970-01-01T00:00');
     })
 })
