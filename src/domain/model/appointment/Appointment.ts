@@ -1,11 +1,13 @@
-import {LocalDateTime} from '@js-joda/core';
+import {DateTimeFormatter, LocalDateTime} from '@js-joda/core';
 
 export class Appointment {
-    constructor(readonly title: String, readonly description: String, readonly gameCount: Number, readonly localTeamName: String, readonly foreignTeamName: String, readonly startDateTime: LocalDateTime) {}
+    constructor(readonly title: string, readonly startDateTime: LocalDateTime) {}
 }
 
 export class AppointmentFactory {
-    static createFromClickTTCsv(data: any): Appointment {
-        return new Appointment('title', 'description', 4, 'localTeam', 'foreignTeam', LocalDateTime.of(2022, 1, 1));
+    static create(localTeam: string, foreignTeam: string, startDateTime: string): Appointment {
+        const formatter = DateTimeFormatter.ofPattern('dd.MM.yyyy HH:mm');
+
+        return new Appointment("${localTeam} - ${foreignTeam}", LocalDateTime.parse(startDateTime, formatter));
     }
 }
