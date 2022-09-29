@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@js-joda/core": "^5.4.0",
+    "@js-joda/timezone": "^2.13.1",
     "@types/yargs": "^17.0.13",
     "csv-parser": "^3.0.0",
     "inversify": "^6.0.1",

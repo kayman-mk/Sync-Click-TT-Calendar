@@ -22,8 +22,10 @@ node index.ts
 
 ## Credits
 - [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
+- [Ics](https://github.com/adamgibbons/ics) - to handle ics calendar events
 - [InversifyJS](https://github.com/inversify/InversifyJS) - for dependency injection
 - [Js-Joda](https://github.com/js-joda/js-joda) - for date/time handling
 - [Reflect-Metadata](https://github.com/rbuckton/reflect-metadata) - for dependency injection
+- [TsDav](https://github.com/natelindev/tsdav) - to access CalDav calendars
 - [Winston](https://github.com/winstonjs/winston) - for logging
 - [Yargs](https://github.com/yargs/yargs) - a parser for command lines
