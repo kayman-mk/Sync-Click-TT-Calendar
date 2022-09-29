@@ -17,8 +17,8 @@ export class SyncCalendarApplicationService {
         // for each calendar item --> check against Click-TT appointment and do the action
         const appointmentsOrderedByTime = Array.from(appointments).sort((a,b) => a.startDateTime.compareTo(b.startDateTime));
 
-        await this.calendarService.downloadAppointments(appointmentsOrderedByTime[0].startDateTime.atZone(ZoneId.of("Europe/Berlin")), appointmentsOrderedByTime[appointmentsOrderedByTime.length - 1].startDateTime.atZone(ZoneId.of("Europe/Berlin")));
-
+        const calendarAppointments = await this.calendarService.downloadAppointments(appointmentsOrderedByTime[0].startDateTime.atZone(ZoneId.of("Europe/Berlin")), appointmentsOrderedByTime[appointmentsOrderedByTime.length - 1].startDateTime.atZone(ZoneId.of("Europe/Berlin")));
+        calendarAppointments.forEach((x) => console.log(x));
         // for all unprocessed Click-TT items: create them (missing in calendar)
     }
 }

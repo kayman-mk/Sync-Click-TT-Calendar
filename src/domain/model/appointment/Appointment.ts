@@ -6,8 +6,12 @@ export class Appointment {
 
 export class AppointmentFactory {
     static create(localTeam: string, foreignTeam: string, startDateTime: string): Appointment {
-        const formatter = DateTimeFormatter.ofPattern('dd.MM.yyyy HH:mm');
+        const formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
         return new Appointment(localTeam + " - " + foreignTeam, LocalDateTime.parse(startDateTime, formatter));
+    }
+
+    static createFromRaw(title: string, startDateTime: LocalDateTime): Appointment {
+        return new Appointment(title, startDateTime);
     }
 }

@@ -22,6 +22,7 @@ node index.ts
 
 ## Credits
 - [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
+- [Ical](https://github.com/kewisch/ical.js) - to parse ics calendar events from a calendar
 - [Ics](https://github.com/adamgibbons/ics) - to handle ics calendar events
 - [InversifyJS](https://github.com/inversify/InversifyJS) - for dependency injection
 - [Js-Joda](https://github.com/js-joda/js-joda) - for date/time handling
