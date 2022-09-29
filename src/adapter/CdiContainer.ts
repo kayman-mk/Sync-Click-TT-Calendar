@@ -1,4 +1,4 @@
-import inversify from "inversify";
+import { Container } from "inversify";
 
 import { SERVICE_IDENTIFIER, CONFIGURATION } from "../dependency_injection";
 import { Logger } from "./Logger";
@@ -10,18 +10,18 @@ import { LocalFileStorageServiceImpl } from "./service/LocalFileStorageServiceIm
 import { CalendarService } from "../domain/service/CalendarService";
 import { CalDavCalendarServiceImpl } from "./service/CalDavCalendarServiceImpl";
 
-export class Container {
-    private static instance: Container;
+export class CdiContainer {
+    private static instance: CdiContainer;
 
-    static getInstance(): Container {
-        if (Container.instance == null) {
-            Container.instance = new Container();
+    static getInstance(): CdiContainer {
+        if (CdiContainer.instance == null) {
+            CdiContainer.instance = new CdiContainer();
         }
-console.log(Container.instance);
-        return Container.instance;
+        
+        return CdiContainer.instance;
     }
 
-    private container: inversify.Container = new inversify.Container();
+    private container: Container = new Container();
 
     bindConfiguration(key: symbol, value: string | undefined): void {
         if (value !== undefined) {
@@ -42,3 +42,5 @@ console.log(Container.instance);
         return this.container.get<T>(serviceIdentifier);
     }
 }
+
+export const container = CdiContainer.getInstance();

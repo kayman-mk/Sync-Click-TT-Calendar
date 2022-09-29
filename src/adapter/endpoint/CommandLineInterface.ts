@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import { SyncCalendarApplicationService } from "../../application/SyncCalendarApplicationService";
 import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
-import { Container } from "../Container";
+import { container } from "../CdiContainer";
 
 import yargs from 'yargs/yargs';
 
@@ -10,14 +10,16 @@ export class CommandLineInterface {
   main(argv: string[]) {
     const parsedArguments = this.parseArguments(argv);
 
-    Container.getInstance().bindConfiguration(CONFIGURATION.AppointmentFilename, parsedArguments.appointmentFile);
-    Container.getInstance().bindConfiguration(CONFIGURATION.CalendarUrl, parsedArguments.calendarUrl);
+    container.bindConfiguration(CONFIGURATION.AppointmentFilename, parsedArguments.appointmentFile);
+    container.bindConfiguration(CONFIGURATION.CalendarUrl, parsedArguments.calendarUrl);
 
     // from environment
-    Container.getInstance().bindConfiguration(CONFIGURATION.CalendarUsername, process.env.CALENDAR_USERNAME);
-    Container.getInstance().bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
+    container.bindConfiguration(CONFIGURATION.CalendarUsername, process.env.CALENDAR_USERNAME);
+    container.bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
 
-    Container.getInstance().getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar(parsedArguments.appointmentFile);
+    container.startContainer();
+    
+    container.getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar(parsedArguments.appointmentFile);
   }
 
   private parseArguments(argv: string[]) {

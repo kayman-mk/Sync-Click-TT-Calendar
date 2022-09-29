@@ -1,4 +1,4 @@
-import container from "../../../src/adapter/container";
+import { CdiContainer } from "../../../src/adapter/CdiContainer";
 
 import { CommandLineInterface } from "../../../src/adapter/endpoint/CommandLineInterface";
 import { SyncCalendarApplicationService } from "../../../src/application/SyncCalendarApplicationService";
@@ -9,7 +9,7 @@ describe('CommandLineInterface', () => {
         // given
         const givenArguments = [["-f", "under-test.csv"], ["-appointment-file", "under-test.csv"]];
 
-        const spy = jest.spyOn(container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
+        const spy = jest.spyOn(CdiContainer.getInstance().getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
         spy.mockImplementation();
 
         givenArguments.forEach(parameters => {
@@ -28,7 +28,7 @@ describe('CommandLineInterface', () => {
         // given
         const givenArguments = [["-f", "xxx.csv", "-c", "https://under-test.local"], ["-appointment-file", "xxx.csv", "--calendar-url", "https://under-test.local"]];
 
-        const spy = jest.spyOn(container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
+        const spy = jest.spyOn(CdiContainer.getInstance().getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
         spy.mockImplementation();
 
         givenArguments.forEach(parameters => {

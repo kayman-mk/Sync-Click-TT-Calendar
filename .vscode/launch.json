@@ -13,6 +13,7 @@
             ],
             "program": "${workspaceFolder}\\target\\src\\index.js",
             "args": ["-f", "/c/temp/Vereinsspielplan_20220922150454.csv", "-c", "x"],
+            "env": {"CALENDAR_USERNAME": "x", "CALENDAR_PASSWORD": "Y"},
             "preLaunchTask": "npm: build",
             "sourceMaps": true,
             "smartStep": true,

@@ -11,7 +11,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
     constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger) {
         this.client = new DAVClient({
-            serverUrl: 'http://10.213.61.251:5232/kayma/db66f6af-dca8-6395-a3b5-ec0fa69c99b9',
+            serverUrl: 'https://xxx/kayma/db66f6af-dca8-6395-a3b5-ec0fa69c99b9',
             credentials: {
                 username: 'xxx',
                 password: 'yyy',
