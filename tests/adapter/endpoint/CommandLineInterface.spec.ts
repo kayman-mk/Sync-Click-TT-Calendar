@@ -5,33 +5,41 @@ import { SyncCalendarApplicationService } from "../../../src/application/SyncCal
 import { SERVICE_IDENTIFIER } from "../../../src/dependency_injection";
 
 describe('CommandLineInterface', () => {
-    it('should accept -f parameter', () => {
-        // give
-        const givenArguments = ["-f", "xxx.csv"];
+    it('should accept -f/--appointment-file parameter', () => {
+        // given
+        const givenArguments = [["-f", "under-test.csv"], ["-appointment-file", "under-test.csv"]];
 
         const spy = jest.spyOn(container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
         spy.mockImplementation();
 
-        // when
-        new CommandLineInterface().main(givenArguments);
+        givenArguments.forEach(parameters => {
+            spy.mockReset();
 
-        // then
-        expect(spy).toHaveBeenCalled();
-        expect(spy.mock.calls[0][0]).toBe("xxx.csv");
+            // when
+            new CommandLineInterface().main(parameters);
+
+            // then
+            expect(spy).toHaveBeenCalled();
+            expect(spy.mock.calls[0][0]).toBe("xxx.csv");
+        });
     });
 
-    it('should accept --appointment-file parameter', () => {
+    it('should accept -c/--calendar-url', () => {
         // given
-        const givenArguments = ["--appointment-file", "xxx.csv"];
+        const givenArguments = [["-f", "xxx.csv", "-c", "https://under-test.local"], ["-appointment-file", "xxx.csv", "--calendar-url", "https://under-test.local"]];
 
         const spy = jest.spyOn(container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'syncCalendar');
         spy.mockImplementation();
 
-        // when
-        new CommandLineInterface().main(givenArguments);
+        givenArguments.forEach(parameters => {
+            spy.mockReset();
 
-        // then
-        expect(spy).toHaveBeenCalled();
-        expect(spy.mock.calls[0][0]).toBe("xxx.csv");
+            // when
+            new CommandLineInterface().main(parameters);
+
+            // then
+            expect(spy).toHaveBeenCalled();
+            expect(spy.mock.calls[0][0]).toBe("xxx.csv");
+        });
     });
 });
