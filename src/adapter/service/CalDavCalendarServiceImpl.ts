@@ -8,16 +8,19 @@ import { Appointment, AppointmentFactory } from "../../domain/model/appointment/
 import { CalendarService } from "../../domain/service/CalendarService";
 import { Logger } from "../Logger";
 
+/**
+ * Reads all events from a certain calendar. Events must be linked to category 'Click-TT'
+ */
 @injectable()
 export class CalDavCalendarServiceImpl implements CalendarService {
     private client: DAVClient;
 
     constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger) {
         this.client = new DAVClient({
-            serverUrl: 'zzz',
+            serverUrl: '',
             credentials: {
-                username: 'xxx',
-                password: 'yyy',
+                username: '',
+                password: '',
             },
             authMethod: 'Basic',
             defaultAccountType: 'caldav'
@@ -46,17 +49,20 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             var vcalendar = new ICAL.Component(ICAL.parse(calendarAppointment.data));
             var vevent = vcalendar.getFirstSubcomponent('vevent');
 
-            var summary = vevent.getFirstPropertyValue('summary');
             var startDateTime = LocalDateTime.parse(vevent.getFirstPropertyValue('dtstart').toString(), vEventDateTimeFormatter);
-            
             if (startDateTime.isAfter(minimumDateTime.toLocalDateTime()) && startDateTime.isBefore(maximumDateTime.toLocalDateTime())) {
+                var summary = vevent.getFirstPropertyValue('summary');
                 console.log(calendarAppointment.data);
-                result.add(AppointmentFactory.createFromRaw(summary, startDateTime));
+
+                const lines: string[] = vevent.getFirstPropertyValue('description').toString().split("\n");
+                const id: string[] = lines.filter(line => line.startsWith('ID: '));
+
+                result.add(AppointmentFactory.createFromRaw(summary, startDateTime, id?[0].substring(4)));
             }
         });
 
         this.logger.info("Found " + result.size + " calendar entries.");
-        
+
         return Promise.resolve(new Set<Appointment>(result));
     }
 }

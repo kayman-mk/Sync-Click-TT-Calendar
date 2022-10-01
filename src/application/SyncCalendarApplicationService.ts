@@ -12,13 +12,12 @@ export class SyncCalendarApplicationService {
 
     async syncCalendar(appointmentFilename: string) {
         // parsing ClickTT CSV file
-        const appointments: Set<Appointment> = await this.appointmentParserService.parseAppointments(appointmentFilename);
+        const appointmentsFromFile: Set<Appointment> = await this.appointmentParserService.parseAppointments(appointmentFilename);
 
-        // for each calendar item --> check against Click-TT appointment and do the action
-        const appointmentsOrderedByTime = Array.from(appointments).sort((a,b) => a.startDateTime.compareTo(b.startDateTime));
-
+        // read the calendar
+        const appointmentsOrderedByTime = Array.from(appointmentsFromFile).sort((a,b) => a.startDateTime.compareTo(b.startDateTime));
         const calendarAppointments = await this.calendarService.downloadAppointments(appointmentsOrderedByTime[0].startDateTime.atZone(ZoneId.of("Europe/Berlin")), appointmentsOrderedByTime[appointmentsOrderedByTime.length - 1].startDateTime.atZone(ZoneId.of("Europe/Berlin")));
-        calendarAppointments.forEach((x) => console.log(x));
-        // for all unprocessed Click-TT items: create them (missing in calendar)
+
+        // check, what to do
     }
 }
