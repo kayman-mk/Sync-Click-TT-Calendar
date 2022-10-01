@@ -57,7 +57,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                 const lines: string[] = vevent.getFirstPropertyValue('description').toString().split("\n");
                 const id: string[] = lines.filter(line => line.startsWith('ID: '));
 
-                result.add(AppointmentFactory.createFromRaw(summary, startDateTime, id?[0].substring(4)));
+                result.add(AppointmentFactory.createFromRaw(summary, startDateTime, id.length > 0 ? id[0].substring(4) : undefined));
             }
         });
 

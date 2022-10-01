@@ -19,5 +19,9 @@ export class SyncCalendarApplicationService {
         const calendarAppointments = await this.calendarService.downloadAppointments(appointmentsOrderedByTime[0].startDateTime.atZone(ZoneId.of("Europe/Berlin")), appointmentsOrderedByTime[appointmentsOrderedByTime.length - 1].startDateTime.atZone(ZoneId.of("Europe/Berlin")));
 
         // check, what to do
+        const processedIds: Set<String> = new Set();
+
+        appointmentsFromFile.forEach(appointmentFile => {
+        });
     }
 }
