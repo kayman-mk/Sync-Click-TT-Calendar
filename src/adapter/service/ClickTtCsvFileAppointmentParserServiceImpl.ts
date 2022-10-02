@@ -18,7 +18,9 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
             Readable.from(this.fileStorageService.readFile(`${filename}`))
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data) => {
-                    appointments.add(AppointmentFactory.create(data.HeimVereinName, data.GastVereinName, data.Termin, data.Staffel, data.Begegnung));
+                    if (data.GastVereinName != 'spielfrei') {
+                        appointments.add(AppointmentFactory.create(data.HeimVereinName, data.GastVereinName, data.Termin, data.Staffel, data.BegegnungNr, data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt));
+                    }
                 })
                 .on('end', () => {
                     this.logger.info("Found " + appointments.size + " appointments in CSV file.");
