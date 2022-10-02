@@ -22,6 +22,7 @@ export class SyncCalendarApplicationService {
 
         // check, what to do
         const processedIds: Set<String> = new Set();
+const createAppointments: Appointment[] = [];
 
         appointmentsFromFile.forEach(appointmentFile => {
             if (this.isAppointmentInSet(calendarAppointments, appointmentFile.id)) {
@@ -29,7 +30,7 @@ export class SyncCalendarApplicationService {
                 this.logger.info("update appointment in calendar");
             } else {
                 // appointment from file is missing in calendar --> create
-                this.logger.info("create appointment in calendar");
+                createAppointments.push(appointmentFile);
             }
 
             processedIds.add(appointmentFile.id);
@@ -42,16 +43,20 @@ export class SyncCalendarApplicationService {
             }
         });
 
-        await this.calendarService.createAppointment(appointmentsOrderedByTime[0]);
+        for (let index = 0; index < createAppointments.length; index++) {
+            await this.calendarService.createAppointment(createAppointments[index]);
+        }
     }
 
     private isAppointmentInSet(appointments: Set<Appointment>, id: string) {
+        let result = false;
+
         appointments.forEach(appointment => {
-            if (appointment.id == id) {
-                return true;
+            if (appointment.id === id) {
+                result = true;
             }
         });
 
-        return false;
+        return result;
     }
 }

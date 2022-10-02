@@ -8,6 +8,7 @@ import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { Appointment, AppointmentFactory } from "../../domain/model/appointment/Appointment";
 import { CalendarService } from "../../domain/service/CalendarService";
 import { Logger } from "../Logger";
+import { exit } from 'process';
 
 /**
  * Reads all events from a certain calendar. Events must be linked to category 'Click-TT'
@@ -81,21 +82,22 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                     throw Error("No parser defined for date/time: " + vevent.getFirstPropertyValue('dtstart'));
                 }
 
-                if (startDateTime.isAfter(minimumDateTime.toLocalDateTime()) && startDateTime.isBefore(maximumDateTime.toLocalDateTime())) {
+                if (startDateTime.isAfter(minimumDateTime.toLocalDateTime().minusMonths(1)) && startDateTime.isBefore(maximumDateTime.toLocalDateTime().plusMonths(1))) {
                     var summary = vevent.getFirstPropertyValue('summary');
 
                     const lines: string[] = vevent.getFirstPropertyValue('description').toString().split("\n");
                     const id: string[] = lines.filter(line => line.startsWith('ID: '));
+                    const categories: string[] = vevent.getAllProperties('categories').map((category: { getFirstValue: () => any; }) => category.getFirstValue());
 
                     if (id.length == 0) {
                         this.logger.warning("No ID found for calendar item '" + summary + "', " + startDateTime);
                     } else {
-                        result.add(AppointmentFactory.createFromRaw(summary, startDateTime, id[0].substring(4), vevent.getFirstPropertyValue('location')));
+                        result.add(AppointmentFactory.createFromRaw(summary, startDateTime, id[0], vevent.getFirstPropertyValue('location'), categories));
                     }
                 }
             } catch (error) {
-                this.logger.info(vevent.getFirstPropertyValue('dtstart'));
-                this.logger.info(vevent);
+                this.logger.debug(vevent);
+
                 throw error;
             }
         });
@@ -113,6 +115,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
         const createPromise = new Promise((resolve, reject) => {
             ics.createEvent(this.appointmentToIcsEvent(appointment), (error: Error, value: string) => {
                 if (error) {
+                    this.logger.error(error);
                     reject(error);
                 }
 
@@ -124,18 +127,24 @@ export class CalDavCalendarServiceImpl implements CalendarService {
     }
 
     private appointmentToIcsEvent(appointment: Appointment) {
+        const categories = ["Click-TT"];
+
+        if (appointment.isCup) {
+            categories.push('Pokal');
+        } else {
+            categories.push('Liga');
+        }
+
         return {
-            start: [2022, 10, 12, 6, 30],
+            start: [appointment.startDateTime.year(), appointment.startDateTime.monthValue(), appointment.startDateTime.dayOfMonth(), appointment.startDateTime.hour(), appointment.startDateTime.minute()],
             duration: { hours: 2, minutes: 30 },
             title: appointment.title,
             description: appointment.id,
             location: appointment.location,
-            //            url: 'http://www.bolderboulder.com/',
-            //            geo: { lat: 40.0095, lon: 105.2669 },
-            categories: ['Click TT'],
+            categories: categories,
             status: 'CONFIRMED',
             busyStatus: 'BUSY',
-            //            organizer: { name: 'Admin', email: 'Race@BolderBOULDER.com' },
+//            organizer: { name: 'xxx', email: 'yyy' },
             //            attendees: [
             //                { name: 'Adam Gibbons', email: 'adam@example.com', rsvp: true, partstat: 'ACCEPTED', role: 'REQ-PARTICIPANT' },
             //                { name: 'Brittany Seaton', email: 'brittany@example2.org', dir: 'https://linkedin.com/in/brittanyseaton', role: 'OPT-PARTICIPANT' }
