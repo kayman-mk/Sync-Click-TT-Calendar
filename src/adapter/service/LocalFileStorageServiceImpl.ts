@@ -6,6 +6,6 @@ import { FileStorageService } from "../../domain/service/FileStorageService";
 @injectable()
 export class LocalFileStorageServiceImpl implements FileStorageService {
     readFile(filename: string): Buffer {
-        return fs.readFileSync(`${filename}`);
+        return Buffer.from(fs.readFileSync(`${filename}`, {encoding: 'latin1'}));
     }
 }

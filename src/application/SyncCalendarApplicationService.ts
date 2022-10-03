@@ -1,9 +1,10 @@
 import { DateTimeFormatter, ZoneId } from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
+import { exit } from "process";
 import { Logger } from "../adapter/Logger";
 import { SERVICE_IDENTIFIER } from "../dependency_injection";
-import { Appointment } from "../domain/model/appointment/Appointment";
+import { Appointment, AppointmentInterface } from "../domain/model/appointment/Appointment";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { CalendarService } from "../domain/service/CalendarService";
 
@@ -22,41 +23,54 @@ export class SyncCalendarApplicationService {
 
         // check, what to do
         const processedIds: Set<String> = new Set();
-const createAppointments: Appointment[] = [];
+        const createAppointments: Appointment[] = [];
+        const updateAppointments: Map<AppointmentInterface, AppointmentInterface> = new Map();
 
         appointmentsFromFile.forEach(appointmentFile => {
-            if (this.isAppointmentInSet(calendarAppointments, appointmentFile.id)) {
-                // appointment from file is present in calendar --> check for update
-                this.logger.info("update appointment in calendar");
+            const existingCalendarAppointment = this.isAppointmentInSet(calendarAppointments, appointmentFile.getId());
+
+            if (existingCalendarAppointment) {
+                if (existingCalendarAppointment.needsUpdate(appointmentFile)) {
+                    // appointment from file is present in calendar --> check for update
+                    this.logger.info("update appointment in calendar");
+                    updateAppointments.set(existingCalendarAppointment, appointmentFile);
+                }
             } else {
                 // appointment from file is missing in calendar --> create
+                this.logger.info("create appointment in calendar");
                 createAppointments.push(appointmentFile);
             }
 
-            processedIds.add(appointmentFile.id);
+            processedIds.add(appointmentFile.getId());
         });
 
         calendarAppointments.forEach(appointmentCalendar => {
-            if (!processedIds.has(appointmentCalendar.id)) {
+            if (!processedIds.has(appointmentCalendar.getId())) {
                 // calendar appointment not touched --> no longer in appointment file --> delete
                 this.logger.info("delete appointment from calendar");
+                this.calendarService.deleteAppointment(appointmentCalendar);
             }
         });
 
         for (let index = 0; index < createAppointments.length; index++) {
             await this.calendarService.createAppointment(createAppointments[index]);
         }
+
+        for (let entry of updateAppointments) {
+            console.log(entry[0])
+            console.log(entry[1])
+            exit;
+            await this.calendarService.updateAppointment(entry[0], entry[1]);
+        }
     }
 
-    private isAppointmentInSet(appointments: Set<Appointment>, id: string) {
-        let result = false;
+    private isAppointmentInSet(appointments: Set<AppointmentInterface>, id: string): AppointmentInterface | undefined {
+        let result: Appointment;
 
-        appointments.forEach(appointment => {
-            if (appointment.id === id) {
-                result = true;
+        for (const appointment of appointments.entries()) {
+            if (appointment[0].getId() === id) {
+                return appointment[0];
             }
-        });
-
-        return result;
+        }
     }
 }
