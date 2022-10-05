@@ -1,11 +1,21 @@
+import "reflect-metadata";
 import { CdiContainer } from "../../../src/adapter/CdiContainer";
 
 import { CommandLineInterface } from "../../../src/adapter/endpoint/CommandLineInterface";
 import { SyncCalendarApplicationService } from "../../../src/application/SyncCalendarApplicationService";
-import { SERVICE_IDENTIFIER } from "../../../src/dependency_injection";
+import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../../src/dependency_injection";
 
 describe('CommandLineInterface', () => {
     it('should accept -f/--appointment-file parameter', () => {
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.AppointmentFilename, "under-test.csv");
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUrl, "https://cal.local");
+    
+        // from environment
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUsername, "username");
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarPassword, "password");
+    
+        CdiContainer.getInstance().startContainer();
+
         // given
         const givenArguments = [["-f", "under-test.csv"], ["-appointment-file", "under-test.csv"]];
 
@@ -25,6 +35,16 @@ describe('CommandLineInterface', () => {
     });
 
     it('should accept -c/--calendar-url', () => {
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.AppointmentFilename, "under-test.csv");
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUrl, "https://cal.local");
+    
+        // from environment
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUsername, "username");
+        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarPassword, "password");
+    
+        CdiContainer.getInstance().startContainer();
+
+
         // given
         const givenArguments = [["-f", "xxx.csv", "-c", "https://under-test.local"], ["-appointment-file", "xxx.csv", "--calendar-url", "https://under-test.local"]];
 
