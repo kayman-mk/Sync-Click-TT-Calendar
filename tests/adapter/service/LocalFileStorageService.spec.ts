@@ -2,7 +2,6 @@ import tmp from 'tmp-promise';
 import fs from 'fs';
 
 import { LocalFileStorageServiceImpl } from "../../../src/adapter/service/LocalFileStorageServiceImpl"
-import { promisify } from 'util';
 
 describe('LocalFileStore', () => {
     it('should read file from local disk', () => {

@@ -1,26 +1,41 @@
 import "reflect-metadata";
 
 import { SyncCalendarApplicationService } from "../../application/SyncCalendarApplicationService";
-import { SERVICE_IDENTIFIER } from "../../dependency_injection";
-import container from "../container";
+import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
+import { container } from "../CdiContainer";
 
 import yargs from 'yargs/yargs';
 
 export class CommandLineInterface {
-  main(args: string[]) {
-    const parsedArguments = this.extractArguments(args);
+  main(argv: string[]) {
+    const parsedArguments = this.parseArguments(argv);
 
-    container.get<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar(parsedArguments.appointmentFile);
+    container.bindConfiguration(CONFIGURATION.AppointmentFilename, parsedArguments.appointmentFile);
+    container.bindConfiguration(CONFIGURATION.CalendarUrl, parsedArguments.calendarUrl);
+
+    // from environment
+    container.bindConfiguration(CONFIGURATION.CalendarUsername, process.env.CALENDAR_USERNAME);
+    container.bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
+
+    container.startContainer();
+    
+    container.getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar(parsedArguments.appointmentFile);
   }
 
-  private extractArguments(args: string[]) {
-    return yargs(args).options({
+  private parseArguments(argv: string[]) {
+    return yargs(argv).options({
       'appointment-file': {
         alias: 'f',
         demandOption: true,
         description: 'CSV file with all appointments',
         type: 'string'
-      }
+      },
+      'calendar-url': {
+        alias: 'c',
+        demandOption: true,
+        description: 'Url of the calendar to update',
+        type: 'string'
+      },
     }).parseSync();
   }
 }

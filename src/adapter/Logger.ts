@@ -8,7 +8,7 @@ export class Logger {
 
     constructor() {
         this.logger = winston.createLogger({
-            format: format.combine(format.errors({ stack: true }), format.timestamp(), format.prettyPrint()),
+            format: format.combine(format.errors({ stack: true }), format.timestamp(), format.cli()),
             level: 'info',
             transports: [
                 new winston.transports.Console(),
