@@ -38,6 +38,7 @@ export class SyncCalendarApplicationService {
             } else {
                 // appointment from file is missing in calendar --> create
                 this.logger.info("create appointment in calendar");
+                
                 createAppointments.push(appointmentFile);
             }
 
@@ -47,19 +48,18 @@ export class SyncCalendarApplicationService {
         calendarAppointments.forEach(appointmentCalendar => {
             if (!processedIds.has(appointmentCalendar.id)) {
                 // calendar appointment not touched --> no longer in appointment file --> delete
-                this.logger.info("delete appointment");
-              //  this.calendarService.deleteAppointment(appointmentCalendar);
+                this.logger.info("delete appointment from calendat");
+                
+                this.calendarService.deleteAppointment(appointmentCalendar);
             }
         });
 
         for (let index = 0; index < createAppointments.length; index++) {
-            this.logger.info("create new appointment");
-            //await this.calendarService.createAppointment(createAppointments[index]);
+            await this.calendarService.createAppointment(createAppointments[index]);
         }
 
         for (let entry of updateAppointments) {
-            this.logger.info("update appointment");
-            //await this.calendarService.updateAppointment(entry[0], entry[1]);
+            await this.calendarService.updateAppointment(entry[0], entry[1]);
         }
     }
 
