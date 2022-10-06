@@ -79,6 +79,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                         const zoneDateTime = ZonedDateTime.parse(vevent.getFirstPropertyValue('dtstart').toString(), vEventDateTimeFormatters[index]);
                         startDateTime = zoneDateTime.withZoneSameInstant(ZoneId.of('Europe/Berlin')).toLocalDateTime()
                         startDateTimeFound = true;
+
                         break;
                     } catch (error) {
                         ;
@@ -95,21 +96,19 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                 }
 
                 if (startDateTimeFound && startDateTime.isAfter(minimumDateTime.toLocalDateTime().minusMonths(1)) && startDateTime.isBefore(maximumDateTime.toLocalDateTime().plusMonths(1))) {
-                    var summary = vevent.getFirstPropertyValue('summary');
-
-                    const lines: string[] = vevent.getFirstPropertyValue('description').toString().split("\n");
-                    const id: string[] = lines.filter(line => line.startsWith('ID: '));
+                    const summary = vevent.getFirstPropertyValue('summary');
                     const categories: string[] = vevent.getAllProperties('categories').map((category: { getFirstValue: () => any; }) => category.getFirstValue());
 
-                    if (id.length == 0) {
-                        this.logger.warning("No ID found for calendar item '" + summary + "', " + startDateTime);
-                    } else {
-                        const appointmentFromCalendar = new DAVAppointmentDecorator(AppointmentFactory.createFromRaw(summary, startDateTime, id[0], vevent.getFirstPropertyValue('location'), categories), calendarAppointment);
+                    if (Appointment.isFromClickTT(categories)) {
+                        const appointmentFromCalendar = new DAVAppointmentDecorator(AppointmentFactory.createFromCalendar(summary, startDateTime, vevent.getFirstPropertyValue('description'), vevent.getFirstPropertyValue('location'), categories), calendarAppointment);
+
                         result.add(appointmentFromCalendar);
+                    } else {
+                        console.log("Appointment in calendar ignored. Manually created? No Click-TT ID found:  '" + summary + "', " + startDateTime);
                     }
                 }
             } catch (error) {
-                this.logger.debug(vevent);
+                console.log(vevent);
 
                 throw error;
             }
@@ -146,18 +145,18 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
             const iso8601Formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
-            vevent.updatePropertyWithValue('location', newData.getLocation());
+            vevent.updatePropertyWithValue('location', newData.location);
 
             vevent.removeAllProperties('categories');
-            newData.getCategories().forEach(category => {
+            newData.categories.forEach(category => {
                 var prop = new ICAL.Property('categories');
                 prop.setValue(category);
 
                 vevent.addProperty(prop);
             });
 
-            vevent.updatePropertyWithValue('title', newData.getTitle());
-            vevent.updatePropertyWithValue('dtstart', iso8601Formatter.format(newData.getStartDateTime()));
+            vevent.updatePropertyWithValue('title', newData.title);
+            vevent.updatePropertyWithValue('dtstart', iso8601Formatter.format(newData.startDateTime));
 
             existingAppointment.calendarObject.data = vcalendar.toString();
             await this.client.updateCalendarObject({ calendarObject: existingAppointment.calendarObject });
@@ -179,9 +178,9 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             start: [appointment.startDateTime.year(), appointment.startDateTime.monthValue(), appointment.startDateTime.dayOfMonth(), appointment.startDateTime.hour(), appointment.startDateTime.minute()],
             duration: { hours: 2, minutes: 30 },
             title: appointment.title,
-            description: appointment.getId(),
+            description: appointment.id,
             location: appointment.location,
-            categories: appointment.getCategories(),
+            categories: appointment.categories,
             status: 'CONFIRMED',
             busyStatus: 'BUSY',
             //            organizer: { name: 'xxx', email: 'yyy' },
@@ -193,36 +192,42 @@ export class CalDavCalendarServiceImpl implements CalendarService {
     }
 }
 
+/**
+ * Decorates the appointment with a calendar object. This way we can update the calendar later.
+ */
 class DAVAppointmentDecorator implements AppointmentInterface {
-    readonly calendarObject: DAVCalendarObject;
-    readonly appointment: Appointment;
-
-    constructor(appointment: Appointment, calendarObject: DAVCalendarObject) {
-        this.appointment = appointment;
-        this.calendarObject = calendarObject;
+    constructor(readonly decoratedAppointment: AppointmentInterface, readonly calendarObject: DAVCalendarObject) {
     }
 
-    getTitle(): string {
-        return this.appointment.getTitle();
+    get isCup(): boolean {
+        return this.decoratedAppointment.isCup
     }
 
-    getStartDateTime(): LocalDateTime {
-        return this.appointment.getStartDateTime();
+    get ageClass(): string {
+        return this.decoratedAppointment.ageClass
     }
 
-    getCategories(): string[] {
-        return this.appointment.getCategories();
+    get title(): string {
+        return this.decoratedAppointment.title;
     }
 
-    getId(): string {
-        return this.appointment.getId();
+    get startDateTime(): LocalDateTime {
+        return this.decoratedAppointment.startDateTime;
     }
 
-    getLocation(): string {
-        return this.appointment.getLocation();
+    get categories(): string[] {
+        return this.decoratedAppointment.categories;
     }
 
-    needsUpdate(compareTo: Appointment): boolean {
-        return this.appointment.needsUpdate(compareTo);
+    get id(): string {
+        return this.decoratedAppointment.id;
+    }
+
+    get location(): string {
+        return this.decoratedAppointment.location;
+    }
+
+    isSameAs(compareTo: Appointment): boolean {
+        return this.decoratedAppointment.isSameAs(compareTo);
     }
 }

@@ -1,69 +1,66 @@
-import { DateTimeFormatter, LocalDateTime } from '@js-joda/core';
+import { LocalDateTime } from '@js-joda/core';
+import assert from 'assert';
 
 export interface AppointmentInterface {
-    getId(): string;
-    getLocation(): string;
-    getCategories(): string[];
-getStartDateTime(): LocalDateTime;
-getTitle(): string;
+    get ageClass(): string
+    get categories(): string[]
+    get isCup(): boolean
+    get id(): string
+    get location(): string
+    get startDateTime(): LocalDateTime
+    get title(): string
 
-    needsUpdate(compareTo: Appointment): boolean;
+    /**
+     * Checks if the appointment differs from compareTo
+     * 
+     * Note: Both appointments must have the same id field. Otherwise an error is thrown.
+     * 
+     * @param compareTo the appointment to compare to
+     * @return true if both Appointments differ
+     */
+    isSameAs(compareTo: Appointment): boolean;
 }
 
 export class Appointment implements AppointmentInterface {
-    private id: string;
+    private static CLICK_TT_CATEGORY = "Click-TT"
 
-    constructor(readonly title: string, readonly startDateTime: LocalDateTime, id: string, readonly location: string, readonly isCup: boolean, readonly ageClass: string) {
-        this.id = id;
+    /**
+     * Ensures that an appointment in a calendar is from the Click-TT system.
+     * 
+     * @param categories All categories of the appointment
+     * @returns true if the appointment is based on Click-TT, false otherwise
+     */
+    static isFromClickTT(categories: string[]): boolean {
+        return categories.find(category => Appointment.CLICK_TT_CATEGORY == category) == Appointment.CLICK_TT_CATEGORY
     }
 
-    getTitle(): string {
-        return this.title;
+    constructor(readonly title: string, readonly startDateTime: LocalDateTime, readonly id: string, readonly location: string, readonly isCup: boolean, readonly ageClass: string) {
     }
 
-    getStartDateTime(): LocalDateTime {
-        return this.startDateTime;
+    get categories(): string[] {
+        return [Appointment.CLICK_TT_CATEGORY, this.ageClass, this.isCup ? "Pokal" : "Liga"];
     }
 
-    getId(): string {
-        return this.id;
-    }
-
-    getLocation(): string {
-        return this.location;
-    }
-
-    getCategories(): string[] {
-        const categories = ["Click-TT", this.ageClass];
-
-        if (this.isCup) {
-            categories.push("Pokal");
-        } else {
-            categories.push("Liga");
-        }
-
-        return categories;
-    }
-
-    needsUpdate(compareTo: Appointment): boolean {
+    isSameAs(compareTo: Appointment): boolean {
         if (this.id != compareTo.id) {
-            throw new Error("Make no update check if both events to not belong to the same Click-TT event");
+            throw new Error("Both events do not belong to the same Click-TT appointment!");
         }
 
-        return this.title != compareTo.title || this.startDateTime.compareTo(compareTo.startDateTime) != 0 || this.ageClass != compareTo.ageClass || this.location != compareTo.location || this.isCup != compareTo.isCup;
+        return this.title == compareTo.title && this.startDateTime.compareTo(compareTo.startDateTime) == 0 && this.ageClass == compareTo.ageClass && this.location == compareTo.location && this.isCup == compareTo.isCup;
     }
 }
 
 export class AppointmentFactory {
-    static create(localTeam: string, foreignTeam: string, startDateTime: string, subLeague: string, matchNumber: number, location: string, ageClass: string, isCup: boolean): Appointment {
-        const formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
-        return new Appointment(localTeam + " - " + foreignTeam + " (" + ageClass + ")", LocalDateTime.parse(startDateTime, formatter), "ID: " + subLeague + "-" + matchNumber, location, isCup, ageClass);
+    static createFromCsv(localTeam: string, foreignTeam: string, startDateTime: LocalDateTime, subLeague: string, matchNumber: number, location: string, ageClass: string, isCup: boolean): AppointmentInterface {
+        return new Appointment(localTeam + " - " + foreignTeam + " (" + ageClass + ")", startDateTime, "ID: " + subLeague + "-" + matchNumber, location, isCup, ageClass);
     }
 
-    static createFromRaw(title: string, startDateTime: LocalDateTime, id: string, location: string, categories: string[]): Appointment {
+    static createFromCalendar(title: string, startDateTime: LocalDateTime, description: string, location: string, categories: string[]): AppointmentInterface {
+        assert(Appointment.isFromClickTT(categories), "needs an appointment based on Click-TT")
+
         const isCup = categories.filter(category => 'Pokal' == category).length > 0
         const ageClass = title.substring(title.lastIndexOf('(') + 1, title.length - 1);
+        const id = description.split("\n").filter(line => line.startsWith('ID: '))[0]
 
         return new Appointment(title, startDateTime, id, location, isCup, ageClass);
     }

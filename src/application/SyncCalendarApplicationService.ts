@@ -27,10 +27,10 @@ export class SyncCalendarApplicationService {
         const updateAppointments: Map<AppointmentInterface, AppointmentInterface> = new Map();
 
         appointmentsFromFile.forEach(appointmentFile => {
-            const existingCalendarAppointment = this.isAppointmentInSet(calendarAppointments, appointmentFile.getId());
+            const existingCalendarAppointment = this.isAppointmentInSet(calendarAppointments, appointmentFile.id);
 
             if (existingCalendarAppointment) {
-                if (existingCalendarAppointment.needsUpdate(appointmentFile)) {
+                if (! existingCalendarAppointment.isSameAs(appointmentFile)) {
                     // appointment from file is present in calendar --> check for update
                     this.logger.info("update appointment in calendar");
                     updateAppointments.set(existingCalendarAppointment, appointmentFile);
@@ -41,26 +41,25 @@ export class SyncCalendarApplicationService {
                 createAppointments.push(appointmentFile);
             }
 
-            processedIds.add(appointmentFile.getId());
+            processedIds.add(appointmentFile.id);
         });
 
         calendarAppointments.forEach(appointmentCalendar => {
-            if (!processedIds.has(appointmentCalendar.getId())) {
+            if (!processedIds.has(appointmentCalendar.id)) {
                 // calendar appointment not touched --> no longer in appointment file --> delete
-                this.logger.info("delete appointment from calendar");
-                this.calendarService.deleteAppointment(appointmentCalendar);
+                this.logger.info("delete appointment");
+              //  this.calendarService.deleteAppointment(appointmentCalendar);
             }
         });
 
         for (let index = 0; index < createAppointments.length; index++) {
-            await this.calendarService.createAppointment(createAppointments[index]);
+            this.logger.info("create new appointment");
+            //await this.calendarService.createAppointment(createAppointments[index]);
         }
 
         for (let entry of updateAppointments) {
-            console.log(entry[0])
-            console.log(entry[1])
-            exit;
-            await this.calendarService.updateAppointment(entry[0], entry[1]);
+            this.logger.info("update appointment");
+            //await this.calendarService.updateAppointment(entry[0], entry[1]);
         }
     }
 
@@ -68,7 +67,7 @@ export class SyncCalendarApplicationService {
         let result: Appointment;
 
         for (const appointment of appointments.entries()) {
-            if (appointment[0].getId() === id) {
+            if (appointment[0].id === id) {
                 return appointment[0];
             }
         }
