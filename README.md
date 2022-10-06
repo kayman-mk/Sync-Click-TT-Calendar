@@ -7,18 +7,27 @@ they do not offer a shared calendar for your team/club.
 This repository offers a command line tool to keep your calendar in sync with all appointments entered
 in Click-TT. This is especially useful for large clubs with many teams.
 
+## Click-TT
+The appointment file containing all appointments of your sports club can be found at: Downloads > Vereinsspielplan (csv). This require at least a login.
 ## Usage
-Requires NodeJs16+.
+Requires NodeJs 16+.
 
 ```
-node index.ts
+npm run build && CALENDAR_USERNAME=caldav_user CALENDAR_PASSWORD=caldav_password node target/src/index.js -f click-tt-appointments.csv -c https://my.caldav.local/
 ```
 
-## Roadmap
-1. download all appointments for your club from Click-TT (CSV file)
-2. download all Click-TT related events from your calendar
-3. determine the necessary actions: update, delete, create of appointments
-4. execute the actions
+The environment variables `CALENDAR_USERNAME` and `CALENDAR_PASSWORD` are used for authentication against your CalDav calendar which shall be updated.
+
+Command line parameters:
+- `-f` or `--appointment-file`: the file downloaded from Click-TT containing the appoints for your sports club
+- `-c` or `--calendar-url`: the Url for the calendar to update
+
+## Features
+### Done
+- synchronise your CalDav calendar with the appointments from Click-TT
+
+### planned
+- set the organizer of the appointment to the team lead
 
 ## Credits
 - [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
