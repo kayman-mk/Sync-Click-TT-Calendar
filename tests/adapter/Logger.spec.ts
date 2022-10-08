@@ -42,7 +42,7 @@ describe('Logger', () => {
 
     it('should write a warning message to the log', () => {
         // when
-        logger.warn('warning');
+        logger.warning('warning');
 
         // then
         expect(JSON.parse(loggerOutput.lines[0]).message.trim()).toEqual("warning");

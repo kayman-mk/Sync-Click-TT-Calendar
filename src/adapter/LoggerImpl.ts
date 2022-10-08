@@ -26,7 +26,7 @@ export class LoggerImpl {
         this.logger.error(message);
     }
 
-    warn(message: any) {
+    warning(message: any) {
         this.logger.warn(message);
     }
 
