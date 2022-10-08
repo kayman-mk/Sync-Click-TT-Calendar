@@ -1,6 +1,6 @@
 import { LocalDateTime } from "@js-joda/core"
-import { Readable } from "stream"
-import { Logger } from "../../../src/adapter/Logger"
+import winston from 'winston'
+import { LoggerImpl } from "../../../src/adapter/LoggerImpl"
 import { ClickTtCsvFileAppointmentParserServiceImpl } from "../../../src/adapter/service/ClickTtCsvFileAppointmentParserServiceImpl"
 import { FileStorageService } from "../../../src/domain/service/FileStorageService"
 
@@ -14,7 +14,10 @@ class TestFileStorageService implements FileStorageService {
     }
 }
 
-class TestLogger extends Logger {
+class TestLogger extends LoggerImpl {
+    constructor() {
+        super(new winston.transports.Console())
+    }
 }
 
 describe('Parse Click-TT CSV file', () => {

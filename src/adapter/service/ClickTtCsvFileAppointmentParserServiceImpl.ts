@@ -3,7 +3,7 @@ import { AppointmentFactory, AppointmentInterface } from "../../domain/model/app
 import { AppointmentParserService } from "../../domain/service/AppointmentParserService";
 import { inject, injectable } from 'inversify';
 import { SERVICE_IDENTIFIER } from '../../dependency_injection';
-import { Logger } from '../Logger';
+import { LoggerImpl } from '../LoggerImpl';
 import { FileStorageService } from '../../domain/service/FileStorageService';
 import { Readable } from 'stream';
 import { DateTimeFormatter, LocalDateTime } from '@js-joda/core';
@@ -57,7 +57,7 @@ type ClickTtCsvFile = {
 
 @injectable()
 export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentParserService {
-    constructor(@inject(SERVICE_IDENTIFIER.FileStorageService) readonly fileStorageService: FileStorageService, @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger) { }
+    constructor(@inject(SERVICE_IDENTIFIER.FileStorageService) readonly fileStorageService: FileStorageService, @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl) { }
 
     async parseAppointments(filename: string): Promise<Set<AppointmentInterface>> {
         const appointments: Set<AppointmentInterface> = new Set();

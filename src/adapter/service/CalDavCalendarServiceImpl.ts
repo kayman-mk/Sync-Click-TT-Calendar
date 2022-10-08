@@ -8,7 +8,7 @@ import { DAVCalendar, DAVCalendarObject, DAVClient, isCollectionDirty } from "ts
 import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { Appointment, AppointmentFactory, AppointmentInterface } from "../../domain/model/appointment/Appointment";
 import { CalendarService } from "../../domain/service/CalendarService";
-import { Logger } from "../Logger";
+import { LoggerImpl } from "../LoggerImpl";
 import { exit } from 'process';
 
 /**
@@ -17,9 +17,9 @@ import { exit } from 'process';
 @injectable()
 export class CalDavCalendarServiceImpl implements CalendarService {
     private client: DAVClient;
-    private logger: Logger;
+    private logger: LoggerImpl;
 
-    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: Logger) {
+    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl) {
         this.client = new DAVClient({
             serverUrl: this.url,
             credentials: {

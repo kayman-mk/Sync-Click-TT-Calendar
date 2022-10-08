@@ -3,21 +3,21 @@ import { injectable } from 'inversify';
 import winston, { format } from 'winston';
 
 @injectable()
-export class Logger {
+export class LoggerImpl {
     private logger: winston.Logger;
 
-    constructor() {
+    constructor(transport: winston.transport) {
         this.logger = winston.createLogger({
             format: format.combine(format.errors({ stack: true }), format.timestamp(), format.cli()),
             level: 'info',
             transports: [
-                new winston.transports.Console(),
+                transport
             ],
             exceptionHandlers: [
-                new winston.transports.Console(),
+                transport
             ],
             rejectionHandlers: [
-                new winston.transports.Console(),
+                transport
             ],
         });
     }
@@ -27,7 +27,7 @@ export class Logger {
     }
 
     warning(message: any) {
-        this.logger.warning(message);
+        this.logger.warn(message);
     }
 
     info(message: any) {
