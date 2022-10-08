@@ -8,8 +8,6 @@ import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../../src/dependency_injec
 
 describe('CommandLineInterface', () => {
     it.skip('should accept mandatory parameters -c/--calendar-url and -f/--apointment-file', () => {
-        CdiContainer.resetInstance();
-
         CdiContainer.getInstance().bindConfiguration(CONFIGURATION.AppointmentFilename, "x.csv");
         CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUrl, "https://cal.local");
     
