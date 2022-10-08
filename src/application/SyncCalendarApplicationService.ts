@@ -2,7 +2,7 @@ import { DateTimeFormatter, ZoneId } from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
 import { exit } from "process";
-import { Logger } from "../adapter/Logger";
+import { LoggerImpl } from "../adapter/LoggerImpl";
 import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { Appointment, AppointmentInterface } from "../domain/model/appointment/Appointment";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
@@ -11,7 +11,7 @@ import { CalendarService } from "../domain/service/CalendarService";
 @injectable()
 export class SyncCalendarApplicationService {
     constructor(@inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService, @inject(SERVICE_IDENTIFIER.CalendarService) readonly calendarService: CalendarService,
-        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger) { }
+        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl) { }
 
     async syncCalendar(appointmentFilename: string) {
         // parsing ClickTT CSV file
