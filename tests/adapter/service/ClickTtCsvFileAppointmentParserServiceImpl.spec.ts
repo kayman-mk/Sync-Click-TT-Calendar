@@ -1,3 +1,4 @@
+import { LocalDateTime } from "@js-joda/core"
 import { Readable } from "stream"
 import { Logger } from "../../../src/adapter/Logger"
 import { ClickTtCsvFileAppointmentParserServiceImpl } from "../../../src/adapter/service/ClickTtCsvFileAppointmentParserServiceImpl"
@@ -45,7 +46,13 @@ describe('Parse Click-TT CSV file', () => {
             const actualAppointment = actualAppointments.values().next().value
 
             // then
-            expect(actualAppointment.id).toEqual("ID: 1");
+            expect(actualAppointment.id).toEqual("ID: 3. KK West-2");
+            expect(actualAppointment.ageClass).toEqual("Herren");
+            expect(actualAppointment.categories).toEqual(["Click-TT", "Herren", "Liga"]);
+            expect(actualAppointment.isCup).toEqual(false);
+            expect(actualAppointment.location).toEqual("Holstenhalle, Lübecker Straße 4, 23456 Lübeck");
+            expect(actualAppointment.startDateTime).toEqual(LocalDateTime.parse("2022-10-10T11:45"));
+            expect(actualAppointment.title).toEqual("VfL Hamburg - SC Lübeck III (Herren)");
         })
     })
 })
