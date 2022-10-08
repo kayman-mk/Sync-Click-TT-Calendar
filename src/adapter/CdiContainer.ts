@@ -21,10 +21,6 @@ export class CdiContainer {
         return CdiContainer.instance;
     }
 
-    static resetInstance(): void {
-        CdiContainer.instance = new CdiContainer();
-    }
-
     container: Container = new Container();
 
     bindConfiguration(key: symbol, value: string | undefined): void {
