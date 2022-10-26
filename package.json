@@ -40,7 +40,7 @@
     "@types/yargs": "^17.0.13",
     "csv-parser": "^3.0.0",
     "ical.js": "^1.5.0",
-    "ics": "^2.40.0",
+    "ics": "^2.41.0",
     "inversify": "^6.0.1",
     "reflect-metadata": "^0.1.13",
     "tsdav": "^2.0.3",
