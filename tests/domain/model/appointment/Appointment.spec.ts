@@ -4,7 +4,7 @@ import { Appointment, AppointmentFactory } from "../../../../src/domain/model/ap
 describe('Appointment Factory: from CSV', () => {
     it('should have a title equal to "local - foreign (age)"', () => {
         // when
-        const actualAppointment = AppointmentFactory.createFromCsv('local', 'remote', LocalDateTime.now(), '3. KK West', 5, 'location', 'age', true);
+        const actualAppointment = AppointmentFactory.createFromCsv('local', 'remote', LocalDateTime.now(), '3. KK West', 5, 'location', 'age', true, 'Pokal');
 
         // then
         expect(actualAppointment.title).toEqual("local - remote (age)");
@@ -12,7 +12,7 @@ describe('Appointment Factory: from CSV', () => {
 
     it('should build the ID from subLeague and match number', () => {
         // when
-        const actualAppointment = AppointmentFactory.createFromCsv('local', 'remote', LocalDateTime.now(), '3. KK West', 5, 'location', 'age', true);
+        const actualAppointment = AppointmentFactory.createFromCsv('local', 'remote', LocalDateTime.now(), '3. KK West', 5, 'location', 'age', true, 'Pokal');
 
         // then
         expect(actualAppointment.id).toEqual("ID: 3. KK West-5");
