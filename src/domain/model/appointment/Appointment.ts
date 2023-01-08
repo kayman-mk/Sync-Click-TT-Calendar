@@ -51,8 +51,8 @@ export class Appointment implements AppointmentInterface {
 }
 
 export class AppointmentFactory {
-    static createFromCsv(localTeam: string, foreignTeam: string, startDateTime: LocalDateTime, subLeague: string, matchNumber: number, location: string, ageClass: string, isCup: boolean): AppointmentInterface {
-        return new Appointment(localTeam + " - " + foreignTeam + " (" + ageClass + ")", startDateTime, "ID: " + subLeague + "-" + matchNumber, location, isCup, ageClass);
+    static createFromCsv(localTeam: string, foreignTeam: string, startDateTime: LocalDateTime, subLeague: string, matchNumber: number, location: string, ageClass: string, isCup: boolean, round: string): AppointmentInterface {
+        return new Appointment(localTeam + " - " + foreignTeam + " (" + ageClass + ")", startDateTime, "ID: " + subLeague + "-" + matchNumber + "-" + round + "-" + startDateTime.year(), location, isCup, ageClass);
     }
 
     static createFromCalendar(title: string, startDateTime: LocalDateTime, description: string, location: string, categories: string[]): AppointmentInterface {

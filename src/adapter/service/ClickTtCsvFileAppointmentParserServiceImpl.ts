@@ -73,7 +73,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                         const location = data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt;
                         const isCup = data.Runde == 'Pokal'
 
-                        appointments.add(AppointmentFactory.createFromCsv(data.HeimMannschaft, data.GastMannschaft, startDateTime, data.Staffel, data.BegegnungNr, location, data.Altersklasse, isCup));
+                        appointments.add(AppointmentFactory.createFromCsv(data.HeimMannschaft, data.GastMannschaft, startDateTime, data.Staffel, data.BegegnungNr, location, data.Altersklasse, isCup, data.Runde));
                     } else {
                         this.logger.info("Appointment ignored. It's marked with 'spielfrei' " + startDateTime)
                     }
