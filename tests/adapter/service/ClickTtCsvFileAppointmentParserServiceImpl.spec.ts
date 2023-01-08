@@ -49,7 +49,7 @@ describe('Parse Click-TT CSV file', () => {
             const actualAppointment = actualAppointments.values().next().value
 
             // then
-            expect(actualAppointment.id).toEqual("ID: 3. KK West-2-VR-2023");
+            expect(actualAppointment.id).toEqual("ID: 3. KK West-2-VR-2022");
             expect(actualAppointment.ageClass).toEqual("Herren");
             expect(actualAppointment.categories).toEqual(["Click-TT", "Herren", "Liga"]);
             expect(actualAppointment.isCup).toEqual(false);
