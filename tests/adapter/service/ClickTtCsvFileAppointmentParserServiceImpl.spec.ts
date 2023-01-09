@@ -9,7 +9,7 @@ const defaultAppointments = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;Ha
 11.10.2022 11:45;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;spielfrei;;2;Herren`
 
 const emptyHalleAppointment = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse
-12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;spielfrei;;2;Herren`
+12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;SC Lübeck;;2;Herren`
 
 class TestFileStorageService implements FileStorageService {
     constructor(private readonly fileContent: string) {}
