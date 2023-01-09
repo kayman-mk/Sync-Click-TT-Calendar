@@ -16,7 +16,7 @@ class TestFileStorageService implements FileStorageService {
     constructor(private readonly fileContent: string) {}
 
     readFile(filename: string): Buffer {
-        return Buffer.from(fileContent)
+        return Buffer.from(this.fileContent)
     }
 }
 
