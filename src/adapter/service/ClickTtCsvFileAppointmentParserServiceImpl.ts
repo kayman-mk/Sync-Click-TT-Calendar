@@ -70,7 +70,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                     const startDateTime = LocalDateTime.parse(data.Termin, csvDateTimeFormatter)
 
                     if (data.GastVereinName != 'spielfrei') {
-                        const location = data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt;
+                        const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
                         const isCup = data.Runde == 'Pokal'
 
                         appointments.add(AppointmentFactory.createFromCsv(data.HeimMannschaft, data.GastMannschaft, startDateTime, data.Staffel, data.BegegnungNr, location, data.Altersklasse, isCup, data.Runde));
