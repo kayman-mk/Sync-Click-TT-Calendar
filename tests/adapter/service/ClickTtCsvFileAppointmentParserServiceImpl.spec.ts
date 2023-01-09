@@ -4,13 +4,19 @@ import { LoggerImpl } from "../../../src/adapter/LoggerImpl"
 import { ClickTtCsvFileAppointmentParserServiceImpl } from "../../../src/adapter/service/ClickTtCsvFileAppointmentParserServiceImpl"
 import { FileStorageService } from "../../../src/domain/service/FileStorageService"
 
-class TestFileStorageService implements FileStorageService {
-    readFile(filename: string): Buffer {
-        const csvFile = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse
+const defaultAppointments = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse
 10.10.2022 11:45;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;SC Lübeck;SC Lübeck III;2;Herren
-11.10.2022 11:45;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;spielfrei;;2;Herren`
+11.10.2022 11:45;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;spielfrei;;2;Herren
+12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;spielfrei;;2;Herren`
 
-        return Buffer.from(csvFile)
+const emptyHalleAppointment = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse
+12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;spielfrei;;2;Herren`
+
+class TestFileStorageService implements FileStorageService {
+    constructor(private readonly fileContent: string) {}
+
+    readFile(filename: string): Buffer {
+        return Buffer.from(fileContent)
     }
 }
 
@@ -22,7 +28,7 @@ class TestLogger extends LoggerImpl {
 
 describe('Parse Click-TT CSV file', () => {
     it('should create appointment from CSV data', () => {
-        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(), new TestLogger())
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(defaultAppointments), new TestLogger())
 
         // when
         parser.parseAppointments("abc.csv").then(actualAppointments => {
@@ -32,7 +38,7 @@ describe('Parse Click-TT CSV file', () => {
     })
 
     it('should ignore "spielfrei" appointments', () => {
-        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(), new TestLogger())
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(defaultAppointments), new TestLogger())
 
         // when
         parser.parseAppointments("abc.csv").then(actualAppointments => {
@@ -41,8 +47,20 @@ describe('Parse Click-TT CSV file', () => {
         })
     })
 
+    it('should show empty address if address fields are not filled', () => {
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(emptyHalleAppointment), new TestLogger())
+
+        // when
+        parser.parseAppointments("abc.csv").then(actualAppointments => {
+            const actualAppointment = actualAppointments.values().next().value
+
+            // then
+            expect(actualAppointment.address).toEqual("");
+        })
+    })
+
     it('should extract necessary data from CSV data', () => {
-        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(), new TestLogger())
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(defaultAppointments), new TestLogger())
 
         // when
         parser.parseAppointments("abc.csv").then(actualAppointments => {
