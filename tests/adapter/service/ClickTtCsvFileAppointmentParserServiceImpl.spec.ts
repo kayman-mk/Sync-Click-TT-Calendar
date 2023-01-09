@@ -55,7 +55,7 @@ describe('Parse Click-TT CSV file', () => {
             const actualAppointment = actualAppointments.values().next().value
 
             // then
-            expect(actualAppointment.address).toEqual("");
+            expect(actualAppointment.location).toEqual("");
         })
     })
 
