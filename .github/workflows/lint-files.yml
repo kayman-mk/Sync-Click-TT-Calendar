@@ -8,14 +8,14 @@ jobs:
   lint-yaml:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Validate YAML file
         run: find . \( -name "*.yml" -o -name "*.yaml" \) | xargs yamllint -c .yamllint.yml --strict
 
   lint-json:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: json-syntax-check
         uses: limitusus/json-syntax-check@v2
         with:
