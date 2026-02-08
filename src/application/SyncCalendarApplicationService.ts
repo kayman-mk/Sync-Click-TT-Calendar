@@ -1,7 +1,6 @@
-import { DateTimeFormatter, ZoneId } from "@js-joda/core";
+import { ZoneId } from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
-import { exit } from "process";
 import { LoggerImpl } from "../adapter/LoggerImpl";
 import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { Appointment, AppointmentInterface } from "../domain/model/appointment/Appointment";
@@ -13,7 +12,7 @@ export class SyncCalendarApplicationService {
     constructor(@inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService, @inject(SERVICE_IDENTIFIER.CalendarService) readonly calendarService: CalendarService,
         @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl) { }
 
-    async syncCalendar(appointmentFilename: string) {
+    async syncCalendarFromTtvnDownloadCsv(appointmentFilename: string) {
         // parsing ClickTT CSV file
         const appointmentsFromFile: Set<Appointment> = await this.appointmentParserService.parseAppointments(appointmentFilename);
 
@@ -38,7 +37,7 @@ export class SyncCalendarApplicationService {
             } else {
                 // appointment from file is missing in calendar --> create
                 this.logger.info("create appointment in calendar");
-                
+
                 createAppointments.push(appointmentFile);
             }
 
@@ -48,8 +47,8 @@ export class SyncCalendarApplicationService {
         calendarAppointments.forEach(appointmentCalendar => {
             if (!processedIds.has(appointmentCalendar.id)) {
                 // calendar appointment not touched --> no longer in appointment file --> delete
-                this.logger.info("delete appointment from calendat");
-                
+                this.logger.info("delete appointment from calendar");
+
                 this.calendarService.deleteAppointment(appointmentCalendar);
             }
         });

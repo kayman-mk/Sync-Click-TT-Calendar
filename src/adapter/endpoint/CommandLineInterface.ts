@@ -18,8 +18,8 @@ export class CommandLineInterface {
     container.bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
 
     container.startContainer();
-    
-    container.getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendar(parsedArguments.appointmentFile);
+
+    container.getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService).syncCalendarFromTtvnDownloadCsv(parsedArguments.appointmentFile);
   }
 
   private parseArguments(argv: string[]) {
