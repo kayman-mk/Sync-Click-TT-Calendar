@@ -1,40 +1,70 @@
-import { resolve } from "path";
 import "reflect-metadata";
 import { CdiContainer } from "../../../src/adapter/CdiContainer";
-
 import { CommandLineInterface } from "../../../src/adapter/endpoint/CommandLineInterface";
-import { SyncCalendarApplicationService } from "../../../src/application/SyncCalendarApplicationService";
-import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../../src/dependency_injection";
 
 describe('CommandLineInterface', () => {
-    it.skip('should accept mandatory parameters -c/--calendar-url and -f/--apointment-file', () => {
-        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.AppointmentFilename, "x.csv");
-        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUrl, "https://cal.local");
-    
-        // from environment
-        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarUsername, "username");
-        CdiContainer.getInstance().bindConfiguration(CONFIGURATION.CalendarPassword, "password");
-
+    beforeEach(() => {
         process.env.CALENDAR_USERNAME = "user";
         process.env.CALENDAR_PASSWORD = "password";
+    });
 
-        CdiContainer.getInstance().startContainer();
-
+    it('should_accept_appointment_file_parameter_when_provided', async () => {
         // given
-        const givenArguments = [["-f", "x.csv", "-c", "https://under-test.local"], ["-appointment-file", "x.csv", "--calendar-url", "https://under-test.local"]];
+        const givenArguments = ["-f", "x.csv", "-c", "https://under-test.local"];
+        const mockSyncService = {
+            syncCalendarFromTtvnDownloadCsv: jest.fn().mockResolvedValue(undefined),
+            syncCalendarFromMyTischtennisWebpage: jest.fn().mockResolvedValue(undefined)
+        };
 
-        // const spy = jest.spyOn(CdiContainer.getInstance().getService<SyncCalendarApplicationService>(SERVICE_IDENTIFIER.SyncCalendarAppService), 'service');
-        // spy.mockImplementation();
+        jest.spyOn(CdiContainer.getInstance(), 'getService').mockReturnValue(mockSyncService as any);
+        jest.spyOn(CdiContainer.getInstance(), 'bindConfiguration').mockImplementation();
+        jest.spyOn(CdiContainer.getInstance(), 'startContainer').mockImplementation();
 
-        givenArguments.forEach(parameters => {
-            //spy.mockReset();
+        // when
+        await new CommandLineInterface().main(givenArguments);
 
-            // when
-            new CommandLineInterface().main(parameters);
+        // then
+        expect(mockSyncService.syncCalendarFromTtvnDownloadCsv).toHaveBeenCalledWith("x.csv");
+        expect(mockSyncService.syncCalendarFromMyTischtennisWebpage).not.toHaveBeenCalled();
+    });
 
-            // then
-            // expect(spy).toHaveBeenCalled();
-            // expect(spy.mock.calls[0][0]).toBe("xxx.csv");
-        });
+    it('should_accept_mytischtennis_url_parameter_when_provided', async () => {
+        // given
+        const givenArguments = ["-u", "https://mytischtennis.de/club/123", "-c", "https://under-test.local"];
+        const mockSyncService = {
+            syncCalendarFromTtvnDownloadCsv: jest.fn().mockResolvedValue(undefined),
+            syncCalendarFromMyTischtennisWebpage: jest.fn().mockResolvedValue(undefined)
+        };
+
+        jest.spyOn(CdiContainer.getInstance(), 'getService').mockReturnValue(mockSyncService as any);
+        jest.spyOn(CdiContainer.getInstance(), 'bindConfiguration').mockImplementation();
+        jest.spyOn(CdiContainer.getInstance(), 'startContainer').mockImplementation();
+
+        // when
+        await new CommandLineInterface().main(givenArguments);
+
+        // then
+        expect(mockSyncService.syncCalendarFromMyTischtennisWebpage).toHaveBeenCalledWith("https://mytischtennis.de/club/123");
+        expect(mockSyncService.syncCalendarFromTtvnDownloadCsv).not.toHaveBeenCalled();
+    });
+
+    it('should_throw_error_when_both_options_provided', async () => {
+        // given
+        const givenArguments = ["-f", "x.csv", "-u", "https://mytischtennis.de/club/123", "-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Please provide either --appointment-file or --mytischtennis-url, not both'
+        );
+    });
+
+    it('should_throw_error_when_no_source_option_provided', async () => {
+        // given
+        const givenArguments = ["-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Please provide either --appointment-file or --mytischtennis-url'
+        );
     });
 });
