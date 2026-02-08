@@ -25,7 +25,7 @@ npm run build && CALENDAR_USERNAME=caldav_user CALENDAR_PASSWORD=caldav_password
 
 ### Option 2: Using myTischtennis.de URL
 ```
-npm run build && CALENDAR_USERNAME=caldav_user CALENDAR_PASSWORD=caldav_password node target/src/index.js -m https://mytischtennis.de/clicktt/[region]/[season]/[club-id]/ -c https://my.caldav.local/
+npm run build && CALENDAR_USERNAME=caldav_user CALENDAR_PASSWORD=caldav_password node target/src/index.js -u https://mytischtennis.de/clicktt/[region]/[season]/[club-id]/ -c https://my.caldav.local/
 ```
 
 The environment variables `CALENDAR_USERNAME` and `CALENDAR_PASSWORD` are used for authentication against your CalDav calendar which shall be updated.

@@ -48,20 +48,84 @@ export class SyncCalendarApplicationService {
             const cells = $(element).find('td');
             if (cells.length === 0) return; // Skip empty rows
 
-            // Extract data from table cells based on myTischtennis.de structure
-            // Adjust indices based on actual table structure
-            const termin = $(cells[0]).text().trim();
-            const staffel = $(cells[1]).text().trim();
-            const runde = $(cells[2]).text().trim();
-            const heimMannschaft = $(cells[3]).text().trim();
-            const halleStrasse = $(cells[4]).text().trim();
-            const halleOrt = $(cells[5]).text().trim();
-            const hallePLZ = $(cells[6]).text().trim();
-            const halleName = $(cells[7]).text().trim();
-            const gastVereinName = $(cells[8]).text().trim();
-            const gastMannschaft = $(cells[9]).text().trim();
-            const begegnungNr = $(cells[10]).text().trim();
-            const altersklasse = $(cells[11]).text().trim();
+            // Log first row to debug table structure
+            if (index === 0) {
+                this.logger.info(`First row cell count: ${cells.length}`);
+                cells.each((i, cell) => {
+                    this.logger.info(`Cell ${i}: "${$(cell).text().trim()}"`);
+                });
+            }
+
+            // Extract raw date and time from myTischtennis.de table
+            // The date format is "Mo., 25.08.2025" and time is typically in a separate cell or combined
+            const rawDate = $(cells[0]).text().trim(); // e.g., "Mo., 25.08.2025"
+            const rawTime = $(cells[1]).text().trim(); // e.g., "19:00" or might be part of cell 0
+
+            // Parse date: remove day-of-week prefix (e.g., "Mo., " or "Di., ")
+            // Date format from myTischtennis: "Mo., 25.08.2025" -> "25.08.2025"
+            const dateRegex = /(\d{2}\.\d{2}\.\d{4})/;
+            const dateMatch = dateRegex.exec(rawDate);
+            const date = dateMatch ? dateMatch[1] : rawDate;
+
+            // Try to extract time if it's in the date cell or use the second cell
+            let time = rawTime;
+            const timeRegex = /(\d{2}:\d{2})/;
+            const timeMatch = timeRegex.exec(rawDate);
+            if (timeMatch) {
+                time = timeMatch[1];
+            } else if (!time || !timeRegex.test(time)) {
+                // Default time if not found
+                time = "00:00";
+                this.logger.warning(`No valid time found for date ${date}, using default ${time}`);
+            }
+
+            // Combine date and time in the format expected by CSV parser: "dd.MM.yyyy HH:mm"
+            const termin = `${date} ${time}`;
+
+            // Log parsed date for first few rows to verify
+            if (index < 3) {
+                this.logger.info(`Row ${index}: rawDate="${rawDate}", rawTime="${rawTime}", parsed="${termin}"`);
+            }
+
+            // Map myTischtennis.de table structure to Click-TT CSV format
+            // Based on observed structure: Date, Time, Round/Match#, League/Team info, Team/Venue info, Score
+            // myTischtennis.de typically has: Date | Time | League/Group | Home Team | Guest Team | Venue | ...
+            // But structure may vary, so we'll extract what's available
+
+            // Try to extract available fields with fallbacks
+            const runde = $(cells[2]).text().trim() || "VR"; // Round - default to VR if not available
+            const staffelOrTeam = $(cells[3]).text().trim(); // Could be Staffel or team name
+            const team1 = $(cells[4]).text().trim(); // Could be home team or venue
+            const team2 = $(cells[5]).text().trim(); // Could be guest team or venue
+            const venueOrScore = $(cells[6]).text().trim(); // Could be venue or score
+
+            // Heuristic: if cell 6 looks like a score (e.g., "2:6"), swap interpretations
+            const isScore = /^\d+:\d+$/.test(venueOrScore);
+
+            let staffel, heimMannschaft, gastVereinName, gastMannschaft, halleName;
+
+            if (isScore) {
+                // Past match format: Round | Staffel | Home | Guest | Score
+                staffel = staffelOrTeam;
+                heimMannschaft = team1;
+                gastVereinName = team2;
+                gastMannschaft = team2; // Use same as GastVereinName if not separately available
+                halleName = "";
+            } else {
+                // Future match format or different layout
+                staffel = staffelOrTeam;
+                heimMannschaft = team1;
+                gastVereinName = team2;
+                gastMannschaft = team2;
+                halleName = venueOrScore;
+            }
+
+            // Extract additional fields if available
+            const halleStrasse = $(cells[7]).text().trim();
+            const halleOrt = $(cells[8]).text().trim();
+            const hallePLZ = $(cells[9]).text().trim();
+            const begegnungNr = $(cells[10]).text().trim() || "1";
+            const altersklasse = $(cells[11]).text().trim() || "";
 
             // Build CSV row
             const csvRow = `${termin};${staffel};${runde};${heimMannschaft};${halleStrasse};${halleOrt};${hallePLZ};${halleName};${gastVereinName};${gastMannschaft};${begegnungNr};${altersklasse}`;
