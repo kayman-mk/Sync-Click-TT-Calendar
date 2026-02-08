@@ -68,12 +68,17 @@ export class SyncCalendarApplicationService {
             const date = dateMatch ? dateMatch[1] : rawDate;
 
             // Try to extract time if it's in the date cell or use the second cell
+            // Note: Trailing "v" means the appointment was moved (verlegt in German)
             let time = rawTime;
             const timeRegex = /(\d{2}:\d{2})/;
             const timeMatch = timeRegex.exec(rawDate);
             if (timeMatch) {
                 time = timeMatch[1];
-            } else if (!time || !timeRegex.test(time)) {
+            } else if (time && timeRegex.test(time)) {
+                // Extract just the time part, removing any trailing characters like "v" (moved appointment)
+                const rawTimeMatch = timeRegex.exec(time);
+                time = rawTimeMatch ? rawTimeMatch[1] : time;
+            } else {
                 // Default time if not found
                 time = "00:00";
                 this.logger.warning(`No valid time found for date ${date}, using default ${time}`);

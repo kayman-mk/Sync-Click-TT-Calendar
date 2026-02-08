@@ -67,7 +67,21 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
             Readable.from(this.fileStorageService.readFile(`${filename}`))
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data: ClickTtCsvFile) => {
-                    const startDateTime = LocalDateTime.parse(data.Termin, csvDateTimeFormatter)
+                    // Clean the datetime string: remove trailing characters like "v" (indicating moved appointments)
+                    // and day-of-week prefixes like "Mo., " before parsing
+                    let cleanedTermin = data.Termin.trim();
+
+                    // Remove day-of-week prefix (e.g., "Mo., " or "Di., ")
+                    cleanedTermin = cleanedTermin.replace(/^[A-Za-z]{2}\.,?\s*/, '');
+
+                    // Remove trailing non-time characters (like "v" for "verlegt" = moved)
+                    // Keep only: dd.MM.yyyy HH:mm
+                    const dateTimeMatch = cleanedTermin.match(/(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/);
+                    if (dateTimeMatch) {
+                        cleanedTermin = dateTimeMatch[1];
+                    }
+
+                    const startDateTime = LocalDateTime.parse(cleanedTermin, csvDateTimeFormatter)
 
                     if (data.GastVereinName != 'spielfrei') {
                         const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';

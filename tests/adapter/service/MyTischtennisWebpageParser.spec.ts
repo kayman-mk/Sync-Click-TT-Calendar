@@ -103,4 +103,56 @@ describe('Parse myTischtennis.de table structure', () => {
             expect(firstDataRow).not.toMatch(/^Mo\., /); // Should not start with day of week
         });
     });
+
+    it('should_strip_trailing_v_character_when_appointment_was_moved', () => {
+        // given: a time with trailing "v" indicating the appointment was moved (verlegt)
+        const testFileStorage = new TestFileStorageService();
+        const syncService = new SyncCalendarApplicationService(
+            new TestAppointmentParserService(),
+            new TestCalendarService(),
+            testFileStorage,
+            new TestLogger()
+        );
+
+        // Mock the HTML with a table containing a moved appointment (marked with "v")
+        const mockHtml = `
+            <table class="w-full caption-bottom">
+                <tbody>
+                    <tr>
+                        <td>Di., 16.09.2025</td>
+                        <td>20:30v</td>
+                        <td>1</td>
+                        <td>Bezirksklasse A</td>
+                        <td>SC Klecken</td>
+                        <td>TuS Jork</td>
+                        <td>TBD</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+
+        // Mock axios to return our test HTML
+        const axios = require('axios');
+        jest.spyOn(axios, 'get').mockResolvedValue({ data: mockHtml });
+
+        // when
+        return syncService.syncCalendarFromMyTischtennisWebpage('http://test.com').catch(() => {
+            // then: check the CSV content that was written
+            const csvContent = testFileStorage.getWrittenContent();
+            const lines = csvContent.split('\n');
+
+            // Skip header line and check first data row
+            expect(lines.length).toBeGreaterThan(1);
+            const firstDataRow = lines[1];
+
+            // The date should be cleaned to "16.09.2025 20:30" format without the "v"
+            expect(firstDataRow).toMatch(/^16\.09\.2025 20:30;/);
+            expect(firstDataRow).not.toMatch(/v/); // Should not contain "v" character
+        });
+    });
 });
