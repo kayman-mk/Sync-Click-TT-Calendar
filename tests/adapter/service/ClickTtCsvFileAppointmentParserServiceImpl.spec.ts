@@ -17,6 +17,10 @@ class TestFileStorageService implements FileStorageService {
     readFile(filename: string): Buffer {
         return Buffer.from(this.fileContent)
     }
+
+    writeFile(filename: string, content: string): void {
+        // No-op for tests
+    }
 }
 
 class TestLogger extends LoggerImpl {
