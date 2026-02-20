@@ -1,4 +1,3 @@
-import { LocalDateTime } from "@js-joda/core"
 import winston from 'winston'
 import { LoggerImpl } from "../../../src/adapter/LoggerImpl"
 import { SyncCalendarApplicationService } from "../../../src/application/SyncCalendarApplicationService"
@@ -17,6 +16,10 @@ class TestFileStorageService implements FileStorageService {
 
     writeFile(filename: string, content: string): void {
         this.content = content;
+    }
+
+    deleteFile(filename: string): void {
+        // No-op for tests
     }
 
     getWrittenContent(): string {

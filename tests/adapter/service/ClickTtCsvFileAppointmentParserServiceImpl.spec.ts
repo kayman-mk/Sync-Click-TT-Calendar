@@ -21,6 +21,10 @@ class TestFileStorageService implements FileStorageService {
     writeFile(filename: string, content: string): void {
         // No-op for tests
     }
+
+    deleteFile(filename: string): void {
+        // No-op for tests
+    }
 }
 
 class TestLogger extends LoggerImpl {

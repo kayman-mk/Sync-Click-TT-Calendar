@@ -11,4 +11,10 @@ export class LocalFileStorageServiceImpl implements FileStorageService {
     writeFile(filename: string, content: string): void {
         fs.writeFileSync(filename, content, { encoding: 'latin1' });
     }
+
+    deleteFile(filename: string): void {
+        if (fs.existsSync(filename)) {
+            fs.unlinkSync(filename);
+        }
+    }
 }

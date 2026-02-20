@@ -7,7 +7,6 @@ import { LoggerImpl } from '../LoggerImpl';
 import { FileStorageService } from '../../domain/service/FileStorageService';
 import { Readable } from 'stream';
 import { DateTimeFormatter, LocalDateTime } from '@js-joda/core';
-import { type } from 'os';
 
 /**
  * Specification of the CSV file which can be downloaded from Click-TT
@@ -87,7 +86,17 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                         const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
                         const isCup = data.Runde == 'Pokal'
 
-                        appointments.add(AppointmentFactory.createFromCsv(data.HeimMannschaft, data.GastMannschaft, startDateTime, data.Staffel, data.BegegnungNr, location, data.Altersklasse, isCup, data.Runde));
+                        appointments.add(AppointmentFactory.createFromCsv({
+                            localTeam: data.HeimMannschaft,
+                            foreignTeam: data.GastMannschaft,
+                            startDateTime,
+                            subLeague: data.Staffel,
+                            matchNumber: data.BegegnungNr,
+                            location,
+                            ageClass: data.Altersklasse,
+                            isCup,
+                            round: data.Runde
+                        }));
                     } else {
                         this.logger.info("Appointment ignored. It's marked with 'spielfrei' " + startDateTime)
                     }
