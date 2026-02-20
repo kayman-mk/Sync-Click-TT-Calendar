@@ -76,11 +76,11 @@ describe('Parse Click-TT CSV file', () => {
             // then
             expect(actualAppointment.id).toEqual("ID: 3. KK West-2-VR-2022");
             expect(actualAppointment.ageClass).toEqual("Herren");
-            expect(actualAppointment.categories).toEqual(["Click-TT", "Herren", "Liga"]);
+            expect(actualAppointment.categories).toEqual(["Click-TT", "Liga", "Jugend", "Herren"]);
             expect(actualAppointment.isCup).toEqual(false);
             expect(actualAppointment.location).toEqual("Holstenhalle, Lübecker Straße 4, 23456 Lübeck");
             expect(actualAppointment.startDateTime).toEqual(LocalDateTime.parse("2022-10-10T11:45"));
-            expect(actualAppointment.title).toEqual("VfL Hamburg - SC Lübeck III (Herren)");
+            expect(actualAppointment.title).toEqual("VfL Hamburg - SC Lübeck III [Herren]");
         })
     })
 })
