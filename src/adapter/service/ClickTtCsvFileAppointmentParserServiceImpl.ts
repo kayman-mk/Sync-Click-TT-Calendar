@@ -7,7 +7,6 @@ import { LoggerImpl } from '../LoggerImpl';
 import { FileStorageService } from '../../domain/service/FileStorageService';
 import { Readable } from 'stream';
 import { DateTimeFormatter, LocalDateTime } from '@js-joda/core';
-import { type } from 'os';
 
 /**
  * Specification of the CSV file which can be downloaded from Click-TT
@@ -67,13 +66,37 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
             Readable.from(this.fileStorageService.readFile(`${filename}`))
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data: ClickTtCsvFile) => {
-                    const startDateTime = LocalDateTime.parse(data.Termin, csvDateTimeFormatter)
+                    // Clean the datetime string: remove trailing characters like "v" (indicating moved appointments)
+                    // and day-of-week prefixes like "Mo., " before parsing
+                    let cleanedTermin = data.Termin.trim();
+
+                    // Remove day-of-week prefix (e.g., "Mo., " or "Di., ")
+                    cleanedTermin = cleanedTermin.replace(/^[A-Za-z]{2}\.,?\s*/, '');
+
+                    // Remove trailing non-time characters (like "v" for "verlegt" = moved)
+                    // Keep only: dd.MM.yyyy HH:mm
+                    const dateTimeMatch = cleanedTermin.match(/(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/);
+                    if (dateTimeMatch) {
+                        cleanedTermin = dateTimeMatch[1];
+                    }
+
+                    const startDateTime = LocalDateTime.parse(cleanedTermin, csvDateTimeFormatter)
 
                     if (data.GastVereinName != 'spielfrei') {
                         const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
                         const isCup = data.Runde == 'Pokal'
 
-                        appointments.add(AppointmentFactory.createFromCsv(data.HeimMannschaft, data.GastMannschaft, startDateTime, data.Staffel, data.BegegnungNr, location, data.Altersklasse, isCup, data.Runde));
+                        appointments.add(AppointmentFactory.createFromCsv({
+                            localTeam: data.HeimMannschaft,
+                            foreignTeam: data.GastMannschaft,
+                            startDateTime,
+                            subLeague: data.Staffel,
+                            matchNumber: data.BegegnungNr,
+                            location,
+                            ageClass: data.Altersklasse,
+                            isCup,
+                            round: data.Runde
+                        }));
                     } else {
                         this.logger.info("Appointment ignored. It's marked with 'spielfrei' " + startDateTime)
                     }

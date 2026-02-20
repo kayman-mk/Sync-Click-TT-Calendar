@@ -4,20 +4,20 @@ require('@js-joda/timezone');
 import { v4 as uuidv4 } from 'uuid';
 import { DateTimeFormatter, LocalDateTime, ZonedDateTime, ZoneId } from "@js-joda/core";
 import { inject, injectable } from "inversify";
-import { DAVCalendar, DAVCalendarObject, DAVClient, isCollectionDirty } from "tsdav";
+import { DAVCalendar, DAVCalendarObject, DAVClient } from "tsdav";
 import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { Appointment, AppointmentFactory, AppointmentInterface } from "../../domain/model/appointment/Appointment";
 import { CalendarService } from "../../domain/service/CalendarService";
 import { LoggerImpl } from "../LoggerImpl";
-import { exit } from 'process';
 
 /**
  * Reads all events from a certain calendar. Events must be linked to category 'Click-TT'
  */
 @injectable()
 export class CalDavCalendarServiceImpl implements CalendarService {
-    private client: DAVClient;
-    private logger: LoggerImpl;
+    private readonly client: DAVClient;
+    private readonly logger: LoggerImpl;
+    private calendar: DAVCalendar | undefined;
 
     constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl) {
         this.client = new DAVClient({
@@ -36,19 +36,32 @@ export class CalDavCalendarServiceImpl implements CalendarService {
     private async findCalendar(urlToFind: string): Promise<DAVCalendar> {
         const calendars = await this.client.fetchCalendars();
 
+        this.logger.debug(`Looking for calendar with URL: ${urlToFind}`);
+        this.logger.debug(`Found ${calendars.length} calendars`);
+
         for (let index = 0; index < calendars.length; index++) {
-            if (calendars[index].url == this.url) {
+            this.logger.debug(`Calendar ${index}: ${calendars[index].url} (displayName: ${calendars[index].displayName})`);
+
+            // Check if the calendar URL matches exactly or if the urlToFind is contained in the calendar URL
+            if (calendars[index].url === urlToFind || calendars[index].url?.includes(urlToFind)) {
+                this.logger.info(`Found matching calendar: ${calendars[index].displayName} (${calendars[index].url})`);
                 return calendars[index];
             }
         }
 
-        throw new Error("Calendar not found: " + this.url);
+        // If no match found, log all available calendars to help with debugging
+        this.logger.error(`Calendar not found. Available calendars:`);
+        calendars.forEach((cal, idx) => {
+            this.logger.error(`  [${idx}] ${cal.displayName}: ${cal.url}`);
+        });
+
+        throw new Error(`Calendar not found: ${urlToFind}. Found ${calendars.length} calendar(s). Check the calendar URL parameter.`);
     }
 
     async downloadAppointments(minimumDateTime: ZonedDateTime, maximumDateTime: ZonedDateTime): Promise<Set<AppointmentInterface>> {
         await this.client.login();
 
-        const calendar = await this.findCalendar(this.url);
+        this.calendar = await this.findCalendar(this.url);
 
         const vEventDateTimeFormatters = [
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"),
@@ -57,7 +70,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
         ];
 
         const calendarObjects = await this.client.fetchCalendarObjects({
-            calendar: calendar,
+            calendar: this.calendar,
             //            timeRange: {
             //                "start": startDateTime.format(iso8601Formatter),
             //                "end": endDateTime.format(iso8601Formatter)
@@ -67,22 +80,21 @@ export class CalDavCalendarServiceImpl implements CalendarService {
         const result: Set<AppointmentInterface> = new Set();
 
         calendarObjects.forEach(calendarAppointment => {
-            var vcalendar = new ICAL.Component(ICAL.parse(calendarAppointment.data));
-            var vevent = vcalendar.getFirstSubcomponent('vevent');
+            let vcalendar = new ICAL.Component(ICAL.parse(calendarAppointment.data));
+            let vevent = vcalendar.getFirstSubcomponent('vevent');
 
             try {
-                var startDateTime: LocalDateTime = LocalDateTime.of(2022, 12, 2);
-                var startDateTimeFound = false;
+                let startDateTime: LocalDateTime = LocalDateTime.of(2022, 12, 2);
+                let startDateTimeFound = false;
 
-                for (let index = 0; index < vEventDateTimeFormatters.length; index++) {
+                for (const element of vEventDateTimeFormatters) {
                     try {
-                        const zoneDateTime = ZonedDateTime.parse(vevent.getFirstPropertyValue('dtstart').toString(), vEventDateTimeFormatters[index]);
+                        const zoneDateTime = ZonedDateTime.parse(vevent.getFirstPropertyValue('dtstart').toString(), element);
                         startDateTime = zoneDateTime.withZoneSameInstant(ZoneId.of('Europe/Berlin')).toLocalDateTime()
                         startDateTimeFound = true;
 
                         break;
-                    } catch (error) {
-                        ;
+                    } catch (error) { // NOSONAR - we want to try all formatters until one works, so we catch and ignore the error here
                     }
                 }
 
@@ -92,7 +104,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                 }
 
                 if (!startDateTimeFound) {
-                    console.log("No parser defined for date/time: (" + vevent.getFirstPropertyValue('dtstart') + ")");
+                    this.logger.error("No parser defined for date/time: (" + vevent.getFirstPropertyValue('dtstart') + ")");
                 }
 
                 if (startDateTimeFound && startDateTime.isAfter(minimumDateTime.toLocalDateTime().minusMonths(1)) && startDateTime.isBefore(maximumDateTime.toLocalDateTime().plusMonths(1))) {
@@ -104,11 +116,11 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
                         result.add(appointmentFromCalendar);
                     } else {
-                        console.log("Appointment in calendar ignored. Manually created? No Click-TT ID found:  '" + summary + "', " + startDateTime);
+                        this.logger.warning("Appointment in calendar ignored. Manually created? No Click-TT ID found:  '" + summary + "', " + startDateTime + ", " + categories);
                     }
                 }
             } catch (error) {
-                console.log(vevent);
+                this.logger.debug(vevent);
 
                 throw error;
             }
@@ -120,10 +132,13 @@ export class CalDavCalendarServiceImpl implements CalendarService {
     }
 
     async createAppointment(appointment: Appointment) {
-        const calendar = await this.findCalendar(this.url);
-
         const ics = require('ics')
 
+        // Ensure the calendar is initialized before creating an appointment
+        if (!this.calendar) {
+            await this.client.login();
+            this.calendar = await this.findCalendar(this.url);
+        }
         const createPromise = new Promise((resolve, reject) => {
             ics.createEvent(this.appointmentToIcsEvent(appointment), (error: Error, value: string) => {
                 if (error) {
@@ -131,11 +146,18 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                     reject(error);
                 }
 
-                return resolve(this.client.createCalendarObject({ calendar: calendar, iCalString: value, filename: uuidv4() + ".ics" }));
+                return resolve(
+                    this.client.createCalendarObject({
+                        calendar: this.calendar as DAVCalendar,
+                        iCalString: value,
+                        filename: uuidv4() + ".ics",
+                    })
+                );
             });
         });
 
-        console.log(await createPromise);
+        this.logger.debug(appointment.toString());
+        await createPromise;
     }
 
     async updateAppointment(existingAppointment: AppointmentInterface, newData: AppointmentInterface): Promise<void> {
@@ -159,6 +181,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             vevent.updatePropertyWithValue('dtstart', iso8601Formatter.format(newData.startDateTime));
 
             existingAppointment.calendarObject.data = vcalendar.toString();
+            this.logger.debug(newData.toString());
             await this.client.updateCalendarObject({ calendarObject: existingAppointment.calendarObject });
         } else {
             throw new Error("Update works for calendar objects only!");
@@ -167,6 +190,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
     async deleteAppointment(existingAppointment: AppointmentInterface): Promise<void> {
         if (existingAppointment instanceof DAVAppointmentDecorator) {
+            this.logger.debug(existingAppointment.toString());
             await this.client.deleteCalendarObject({ calendarObject: existingAppointment.calendarObject });
         } else {
             throw new Error("Delete works for calendar objects only!");

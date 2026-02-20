@@ -1,4 +1,8 @@
 import { CommandLineInterface } from "./adapter/endpoint/CommandLineInterface";
 
-// for simplicity
-new CommandLineInterface().main(process.argv);
+// Execute the CLI and handle errors
+new CommandLineInterface().main(process.argv).catch((error) => {
+  console.error('Error:', error.message);
+  process.exit(1);
+});
+
