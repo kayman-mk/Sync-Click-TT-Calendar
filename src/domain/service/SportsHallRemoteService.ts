@@ -1,14 +1,14 @@
 import { SportsHall } from "../model/SportsHall";
+import {Club} from "../model/Club";
 
 /**
  * Service to fetch sports halls from a remote URL.
  */
 export interface SportsHallRemoteService {
     /**
-     * Fetch all sports halls for a team from the given URL.
-     * @param url The URL to fetch sports halls from
+     * Fetch all sports halls for a club.
      * @returns Array of SportsHall objects
      */
-    fetchSportsHalls(url: string): Promise<SportsHall[]>;
+    fetchSportsHalls(club: Club): Promise<SportsHall[]>;
 }
 

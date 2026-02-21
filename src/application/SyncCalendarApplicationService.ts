@@ -7,10 +7,10 @@ import { Appointment, AppointmentInterface } from "../domain/model/Appointment";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { CalendarService } from "../domain/service/CalendarService";
 import { FileStorageService } from "../domain/service/FileStorageService";
-import axios from "axios";
 import * as cheerio from "cheerio";
 import { SportsHallRepository } from "../domain/service/SportsHallRepository";
 import { Team } from "../domain/model/Team";
+import {Club} from "../domain/model/Club";
 
 @injectable()
 export class SyncCalendarApplicationService {
@@ -26,8 +26,10 @@ export class SyncCalendarApplicationService {
         this.logger.info(`Downloading webpage from: ${clubUrl}`);
 
         // Download the webpage
-        const response = await axios.get(clubUrl);
-        const html = response.data;
+        //const response = await axios.get(clubUrl);
+        //const html = response.data;
+        const html = this.fileStorageService.readFile('spielplan.html');
+        //this.fileStorageService.writeFile(`spielplan.html`, html);
 
         // Parse the HTML table using cheerio
         const $ = cheerio.load(html);
@@ -94,7 +96,7 @@ export class SyncCalendarApplicationService {
                         urlObj.pathname = urlObj.pathname.replace(/\/?[^\/]+\/?$/, '/');
                         resolvedUrl = urlObj.toString().replace(/\/$/, ''); // Remove trailing slash
                     } catch {}
-                    team = { name: heimMannschaft, sportsHallsUrl: resolvedUrl };
+                    team = new Team(heimMannschaft, resolvedUrl);
                 }
             }
             const gastMannschaft = $(cells[5]).text().trim();
@@ -104,11 +106,11 @@ export class SyncCalendarApplicationService {
         // Async process each row to fill address fields
         for (const row of rowData) {
             let halleStrasse = '', halleOrt = '', hallePLZ = '', halleNameFinal = row.halleName;
-            let team = row.team;
-            if (row.heimMannschaft && row.halleName && team) {
+            let club: Club = { name: row.team?.getClubName(), url: row.team.url };
+            if (row.heimMannschaft && row.halleName && club) {
                 const hallNumMatch = row.halleName.match(/Spiellokal\s*(\d+)/);
                 const sportshallNumber = hallNumMatch ? Number.parseInt(hallNumMatch[1], 10) : 1;
-                const sportsHall = await this.sportsHallRepository.findOrFetchSportsHall(team, sportshallNumber);
+                const sportsHall = await this.sportsHallRepository.findByClubAndSportshall(club, sportshallNumber);
                 if (sportsHall) {
                     halleStrasse = `${sportsHall.street} ${sportsHall.houseNumber}`.trim();
                     halleOrt = sportsHall.city;

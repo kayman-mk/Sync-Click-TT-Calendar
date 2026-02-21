@@ -1,22 +1,14 @@
 import { SportsHall } from "../model/SportsHall";
-import { Team } from "../model/Team";
+import {Club} from "../model/Club";
 
 export interface SportsHallRepository {
     /**
      * Finds a sports hall by team name and sportshall number.
-     * @param teamName The name of the team
+     * @param club The club
      * @param sportshallNumber The number of the sportshall
      * @returns The SportsHall if found, otherwise undefined
      */
-    findByTeamAndSportshall(teamName: string, sportshallNumber: number): Promise<SportsHall | undefined>;
-
-    /**
-     * Finds a sports hall for a team, fetching and storing all if not found locally.
-     * @param team The team object
-     * @param sportshallNumber The number of the sportshall
-     * @returns The SportsHall if found, otherwise undefined
-     */
-    findOrFetchSportsHall(team: Team, sportshallNumber: number): Promise<SportsHall | undefined>;
+    findByClubAndSportshall(club: Club, sportshallNumber: number): Promise<SportsHall | undefined>;
 
     /**
      * Saves or updates a sports hall.

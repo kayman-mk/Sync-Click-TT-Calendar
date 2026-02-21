@@ -3,3 +3,7 @@ node_modules/
 target/
 
 .env
+spielplan.html
+sports_halls.json
+
+temp-appointments-*.csv
