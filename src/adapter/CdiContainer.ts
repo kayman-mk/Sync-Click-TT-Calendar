@@ -1,6 +1,6 @@
 import { Container } from "inversify";
 
-import { SERVICE_IDENTIFIER, CONFIGURATION } from "../dependency_injection";
+import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { LoggerImpl } from "./LoggerImpl";
 import { SyncCalendarApplicationService } from "../application/SyncCalendarApplicationService";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
@@ -9,16 +9,17 @@ import { FileStorageService } from "../domain/service/FileStorageService";
 import { LocalFileStorageServiceImpl } from "./service/LocalFileStorageServiceImpl";
 import { CalendarService } from "../domain/service/CalendarService";
 import { CalDavCalendarServiceImpl } from "./service/CalDavCalendarServiceImpl";
+import { SportsHallRepository } from "../domain/service/SportsHallRepository";
+import { FileSportsHallRepositoryImpl } from "./service/FileSportsHallRepositoryImpl";
+import { SportsHallRemoteService } from "../domain/service/SportsHallRemoteService";
+import { HttpSportsHallRemoteService } from "./service/HttpSportsHallRemoteService";
 import winston from "winston";
 
 export class CdiContainer {
     private static instance: CdiContainer;
 
     static getInstance(): CdiContainer {
-        if (CdiContainer.instance == null) {
-            CdiContainer.instance = new CdiContainer();
-        }
-        
+        CdiContainer.instance ??= new CdiContainer();
         return CdiContainer.instance;
     }
 
@@ -36,6 +37,8 @@ export class CdiContainer {
         this.container.bind<AppointmentParserService>(SERVICE_IDENTIFIER.AppointmentParserService).to(ClickTtCsvFileAppointmentParserServiceImpl).inSingletonScope();
         this.container.bind<CalendarService>(SERVICE_IDENTIFIER.CalendarService).to(CalDavCalendarServiceImpl).inSingletonScope();
         this.container.bind<FileStorageService>(SERVICE_IDENTIFIER.FileStorageService).to(LocalFileStorageServiceImpl).inSingletonScope();
+        this.container.bind<SportsHallRepository>(SERVICE_IDENTIFIER.SportsHallRepository).to(FileSportsHallRepositoryImpl).inSingletonScope();
+        this.container.bind<SportsHallRemoteService>(SERVICE_IDENTIFIER.SportsHallRemoteService).to(HttpSportsHallRemoteService).inSingletonScope();
         this.container.bind<LoggerImpl>(SERVICE_IDENTIFIER.Logger).toConstantValue(new LoggerImpl(new winston.transports.Console()));
     }
 

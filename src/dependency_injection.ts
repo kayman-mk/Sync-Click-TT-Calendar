@@ -5,7 +5,9 @@ export const SERVICE_IDENTIFIER = {
     CalendarService: Symbol.for("CalendarService"),
     Configuration: Symbol.for("Configuration"),
     FileStorageService: Symbol.for("FileStorageService"),
-    Logger: Symbol.for("Logger")
+    Logger: Symbol.for("Logger"),
+    SportsHallRepository: Symbol.for("SportsHallRepository"),
+    SportsHallRemoteService: Symbol.for("SportsHallRemoteService")
 };
 
 export const CONFIGURATION = {

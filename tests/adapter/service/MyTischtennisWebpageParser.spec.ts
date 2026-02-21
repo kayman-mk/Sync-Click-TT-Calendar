@@ -4,8 +4,9 @@ import { SyncCalendarApplicationService } from "../../../src/application/SyncCal
 import { AppointmentParserService } from "../../../src/domain/service/AppointmentParserService"
 import { CalendarService } from "../../../src/domain/service/CalendarService"
 import { FileStorageService } from "../../../src/domain/service/FileStorageService"
-import { AppointmentInterface } from "../../../src/domain/model/appointment/Appointment"
+import { AppointmentInterface } from "../../../src/domain/model/Appointment"
 import { ZonedDateTime } from "@js-joda/core"
+import { TestSportsHallRepository } from './TestSportsHallRepository';
 
 class TestFileStorageService implements FileStorageService {
     constructor(private content: string = "") { }
@@ -62,7 +63,8 @@ describe('Parse myTischtennis.de table structure', () => {
             new TestAppointmentParserService(),
             new TestCalendarService(),
             testFileStorage,
-            new TestLogger()
+            new TestLogger(),
+            new TestSportsHallRepository()
         );
 
         // Mock the HTML with a simple table structure
@@ -114,7 +116,8 @@ describe('Parse myTischtennis.de table structure', () => {
             new TestAppointmentParserService(),
             new TestCalendarService(),
             testFileStorage,
-            new TestLogger()
+            new TestLogger(),
+            new TestSportsHallRepository()
         );
 
         // Mock the HTML with a table containing a moved appointment (marked with "v")

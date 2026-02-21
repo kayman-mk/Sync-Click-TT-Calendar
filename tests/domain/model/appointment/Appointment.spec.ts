@@ -1,5 +1,5 @@
 import { LocalDate, LocalTime, LocalDateTime } from "@js-joda/core";
-import { Appointment, AppointmentFactory } from "../../../../src/domain/model/appointment/Appointment";
+import { Appointment, AppointmentFactory } from "../../../../src/domain/model/Appointment";
 
 const startDateTime = LocalDateTime.of(LocalDate.of(2023, 1, 1), LocalTime.of(20, 15, 0));
 

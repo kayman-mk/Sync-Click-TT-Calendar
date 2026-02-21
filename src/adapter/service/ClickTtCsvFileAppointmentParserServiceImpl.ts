@@ -1,5 +1,5 @@
 import csv from 'csv-parser';
-import { AppointmentFactory, AppointmentInterface } from "../../domain/model/appointment/Appointment";
+import { AppointmentFactory, AppointmentInterface } from "../../domain/model/Appointment";
 import { AppointmentParserService } from "../../domain/service/AppointmentParserService";
 import { inject, injectable } from 'inversify';
 import { SERVICE_IDENTIFIER } from '../../dependency_injection';

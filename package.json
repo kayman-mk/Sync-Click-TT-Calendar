@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "npm target/src/index.js",
+    "start": "node target/src/index.js",
     "test": "jest"
   },
   "repository": {
@@ -42,6 +42,7 @@
     "axios": "^1.13.5",
     "cheerio": "^1.2.0",
     "csv-parser": "^3.0.0",
+    "dotenv": "^17.3.1",
     "ical.js": "^1.5.0",
     "ics": "^2.41.0",
     "inversify": "^6.0.1",

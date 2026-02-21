@@ -37,6 +37,17 @@ Command line parameters (mutually exclusive):
 
 **Note**: You must provide either `-f` or `-u`, but not both.
 
+## Environment Variables
+
+This project uses a `.env` file for configuration. Create a `.env` file in the project root (see `.env.example` for template) and add your environment variables, e.g.:
+
+```
+CALENDAR_USERNAME=your_caldav_username
+CALENDAR_PASSWORD=your_caldav_password
+```
+
+Environment variables in `.env` are loaded automatically at runtime.
+
 ## Features
 ### Done
 - synchronise your CalDav calendar with the appointments from Click-TT
@@ -57,4 +68,3 @@ Command line parameters (mutually exclusive):
 - [TsDav](https://github.com/natelindev/tsdav) - to access CalDav calendars
 - [Winston](https://github.com/winstonjs/winston) - for logging
 - [Yargs](https://github.com/yargs/yargs) - a parser for command lines
-
