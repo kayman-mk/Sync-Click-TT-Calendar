@@ -80,25 +80,34 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                         cleanedTermin = dateTimeMatch[1];
                     }
 
-                    const startDateTime = LocalDateTime.parse(cleanedTermin, csvDateTimeFormatter)
+                    // Check for required columns
+                    const requiredFields = [data.Termin, data.Staffel, data.Runde, data.HeimMannschaft, data.GastMannschaft, data.BegegnungNr, data.Altersklasse];
+                    if (requiredFields.some(field => field === undefined || field === '')) {
+                        this.logger.warning("Skipping row due to missing required columns.");
+                        return;
+                    }
 
-                    if (data.GastVereinName != 'spielfrei') {
-                        const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
-                        const isCup = data.Runde == 'Pokal'
-
-                        appointments.add(AppointmentFactory.createFromCsv({
-                            localTeam: data.HeimMannschaft,
-                            foreignTeam: data.GastMannschaft,
-                            startDateTime,
-                            subLeague: data.Staffel,
-                            matchNumber: data.BegegnungNr,
-                            location,
-                            ageClass: data.Altersklasse,
-                            isCup,
-                            round: data.Runde
-                        }));
-                    } else {
-                        this.logger.info("Appointment ignored. It's marked with 'spielfrei' " + startDateTime)
+                    try {
+                        const startDateTime = LocalDateTime.parse(cleanedTermin, csvDateTimeFormatter)
+                        if (data.GastVereinName != 'spielfrei') {
+                            const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
+                            const isCup = data.Runde == 'Pokal'
+                            appointments.add(AppointmentFactory.createFromCsv({
+                                localTeam: data.HeimMannschaft,
+                                foreignTeam: data.GastMannschaft,
+                                startDateTime,
+                                subLeague: data.Staffel,
+                                matchNumber: data.BegegnungNr,
+                                location,
+                                ageClass: data.Altersklasse,
+                                isCup,
+                                round: data.Runde
+                            }));
+                        } else {
+                            this.logger.info("Appointment ignored. It's marked with 'spielfrei' " + cleanedTermin)
+                        }
+                    } catch (err) {
+                        this.logger.warning("Skipping row due to invalid date/time: " + cleanedTermin);
                     }
                 })
                 .on('end', () => {

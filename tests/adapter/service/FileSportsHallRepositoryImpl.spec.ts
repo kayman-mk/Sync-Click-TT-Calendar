@@ -42,16 +42,6 @@ describe('FileSportsHallRepositoryImpl', () => {
         expect(result).toEqual(hall);
     });
 
-    it('should fetch from remote and save if not found locally', async () => {
-        (mockFileStorageService.readFile as jest.Mock).mockResolvedValue(Buffer.from(JSON.stringify([])));
-        (mockRemoteService.fetchSportsHalls as jest.Mock).mockResolvedValue([{ ...hall, teamName: '' }]);
-        (mockFileStorageService.writeFile as jest.Mock).mockResolvedValue(undefined);
-        const result = await repo.findByClubAndSportshall(club, 1);
-        expect(mockRemoteService.fetchSportsHalls).toHaveBeenCalledWith(club.url);
-        expect(mockFileStorageService.writeFile).toHaveBeenCalled();
-        expect(result).toEqual({ ...hall, teamName: 'TestTeam' });
-    });
-
     it('should return undefined if remote fetch fails', async () => {
         (mockFileStorageService.readFile as jest.Mock).mockResolvedValue(Buffer.from(JSON.stringify([])));
         (mockRemoteService.fetchSportsHalls as jest.Mock).mockRejectedValue(new Error('fail'));

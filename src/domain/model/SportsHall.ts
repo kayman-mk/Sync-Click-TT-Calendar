@@ -7,5 +7,6 @@ export interface SportsHall {
     street: string;
     houseNumber: string;
     name: string;
+    teamName?: string;
 }
 

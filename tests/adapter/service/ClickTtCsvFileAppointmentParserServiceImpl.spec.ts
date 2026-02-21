@@ -9,7 +9,7 @@ const defaultAppointments = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;Ha
 11.10.2022 11:45;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;spielfrei;;2;Herren`
 
 const emptyHalleAppointment = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse
-12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;SC Lübeck;;2;Herren`
+12.10.2022 11:45;3. KK West;VR;VfL Hamburg;;;;;SC Lübeck;SC Lübeck III;2;Herren`
 
 class TestFileStorageService implements FileStorageService {
     constructor(private readonly fileContent: string) {}
@@ -83,4 +83,38 @@ describe('Parse Click-TT CSV file', () => {
             expect(actualAppointment.title).toEqual("VfL Hamburg - SC Lübeck III [Herren]");
         })
     })
+
+    it('should_parse_date_with_day_of_week_prefix_when_processing_german_date_format', () => {
+        const csvWithDayOfWeek = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse\nMo., 25.08.2025 20:15;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;SC Lübeck;SC Lübeck III;2;Herren`;
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(csvWithDayOfWeek), new TestLogger())
+        parser.parseAppointments("abc.csv").then(actualAppointments => {
+            const actualAppointment = actualAppointments.values().next().value
+            expect(actualAppointment.startDateTime).toEqual(LocalDateTime.parse("2025-08-25T20:15"));
+        })
+    });
+
+    it('should_strip_trailing_v_character_when_appointment_was_moved', () => {
+        const csvWithTrailingV = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse\n16.09.2025 20:30v;3. KK West;VR;VfL Hamburg;Lübecker Straße 4;Lübeck;23456;Holstenhalle;SC Lübeck;SC Lübeck III;2;Herren`;
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(csvWithTrailingV), new TestLogger())
+        parser.parseAppointments("abc.csv").then(actualAppointments => {
+            const actualAppointment = actualAppointments.values().next().value
+            expect(actualAppointment.startDateTime).toEqual(LocalDateTime.parse("2025-09-16T20:30"));
+        })
+    });
+
+    it('should_handle_malformed_date_time_gracefully', () => {
+        const csvMalformed = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse\nnot-a-date;3. KK West;VR;VfL Hamburg;;;;SC Lübeck;;2;Herren`;
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(csvMalformed), new TestLogger())
+        parser.parseAppointments("abc.csv").then(actualAppointments => {
+            expect(actualAppointments.size).toEqual(0);
+        })
+    });
+
+    it('should_handle_missing_columns_gracefully', () => {
+        const csvMissingCols = `Termin;Staffel;Runde;HeimMannschaft\n10.10.2022 11:45;3. KK West;VR;VfL Hamburg`;
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(csvMissingCols), new TestLogger())
+        parser.parseAppointments("abc.csv").then(actualAppointments => {
+            expect(actualAppointments.size).toEqual(0);
+        })
+    });
 })
