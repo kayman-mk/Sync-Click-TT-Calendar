@@ -78,7 +78,7 @@ describe('AppointmentFactory: from calendar entry', () => {
 describe('Appointment', () => {
     it('should assign category "Pokal" to cup games', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', ["Click-TT", "Pokal", "age"])
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, 'ID: a-5-Liga-2023')
 
         // then
         expect(actualAppointment.categories).toContain("Pokal")
@@ -86,7 +86,7 @@ describe('Appointment', () => {
 
     it('should assign category "Liga" to non cup games', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'ID: a-5-Liga-2023', 'location', false, 'age', ["Click-TT", "Liga", "age"])
+        const actualAppointment = new Appointment('title', startDateTime, 'location', false, 'age', ["Click-TT", "Liga", "age"], "", 0, "", 'ID: a-5-Liga-2023')
 
         // then
         expect(actualAppointment.categories).toContain("Liga")
@@ -94,7 +94,7 @@ describe('Appointment', () => {
 
     it('should always assign Click-TT category', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', ["Click-TT", "Pokal", "age"])
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023')
 
         // then
         expect(actualAppointment.categories).toContain("Click-TT")
@@ -102,7 +102,7 @@ describe('Appointment', () => {
 
     it('should assign the ageClass as category', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', ["Click-TT", "Pokal", "age"])
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023')
 
         // then
         expect(actualAppointment.categories).toContain("age")
@@ -126,8 +126,8 @@ describe('Appointment', () => {
 
     it('should report objects as same', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', ["Jugend"])
-        const givenAppointment2 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', ["Jugend"])
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023')
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -138,8 +138,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if title changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title 1', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', [])
-        const givenAppointment2 = new Appointment('title 2', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', [])
+        const givenAppointment1 = new Appointment('title 1', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment2 = new Appointment('title 2', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -150,8 +150,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if date/time changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', [])
-        const givenAppointment2 = new Appointment('title', startDateTime.plusDays(1), 'ID: a-5-Pokal-2023', 'location', true, 'age', [])
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment2 = new Appointment('title', startDateTime.plusDays(1), 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -162,8 +162,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if location changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location 1', true, 'age', [])
-        const givenAppointment2 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location 2', true, 'age', [])
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location 1', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023',)
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location 2', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023',)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -174,8 +174,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if age class changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'ID: a-5', 'location', true, 'age 1', [])
-        const givenAppointment2 = new Appointment('title', startDateTime, 'ID: a-5', 'location', true, 'age 2', [])
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age 1', [], "", 0, "", 'ID: a-5')
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age 2', [], "", 0, "", 'ID: a-5')
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -188,8 +188,8 @@ describe('Appointment', () => {
         //when
         const actualComparator = () => {
             // given
-            const givenAppointment1 = new Appointment('title', startDateTime, 'ID: a-5-Pokal-2023', 'location', true, 'age', [])
-            const givenAppointment2 = new Appointment('title', startDateTime, 'ID: a-6-Pokal-2023', 'location', true, 'age', [])
+            const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
+            const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-6-Pokal-2023')
 
             // when
             givenAppointment1.isSameAs(givenAppointment2)
@@ -204,11 +204,14 @@ describe('Appointment', () => {
         const appointment = new Appointment(
             'Test Match',
             startDateTime,
-            'ID: test-1-2023',
             'Test Location',
             true,
             'U18',
-            ['Click-TT', 'Pokal', 'U18']
+            ['Click-TT', 'Pokal', 'U18'],
+            "",
+            0,
+            "",
+            'ID: test-1-2023'
         );
         // when
         const str = appointment.toString();
