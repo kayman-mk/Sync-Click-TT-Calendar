@@ -9,6 +9,10 @@ export interface AppointmentInterface {
     get location(): string
     get startDateTime(): LocalDateTime
     get title(): string
+    get description(): string
+    get subLeague(): string
+    get matchNumber(): number
+    get round(): string
 
     /**
      * Checks if the appointment differs from compareTo
@@ -34,7 +38,10 @@ export class Appointment implements AppointmentInterface {
         return categories.find(category => Appointment.CLICK_TT_CATEGORY == category) == Appointment.CLICK_TT_CATEGORY
     }
 
-    constructor(readonly title: string, readonly startDateTime: LocalDateTime, readonly id: string, readonly location: string, readonly isCup: boolean, readonly ageClass: string, readonly categories: string[]) {
+    constructor(readonly title: string, readonly startDateTime: LocalDateTime, readonly location: string, readonly isCup: boolean, readonly ageClass: string, readonly categories: string[], readonly subLeague: string, readonly matchNumber: number, readonly round: string, readonly id: string = "") {
+        if (id == "") {
+            this.id = "ID: " + this.subLeague + "-" + this.matchNumber + "-" + this.round + "-" + this.startDateTime.year();
+        }
     }
 
     isSameAs(compareTo: Appointment): boolean {
@@ -65,6 +72,9 @@ export class Appointment implements AppointmentInterface {
         return `Appointment(title="${this.title}", startDateTime="${this.startDateTime}", id="${this.id}", location="${this.location}", isCup=${this.isCup}, ageClass="${this.ageClass}", categories=[${this.categories.join(', ')}])`;
     }
 
+    get description(): string {
+        return `ID: ${this.id}\nCategories: ${this.categories.join(', ')}`;
+    }
 }
 
 export class AppointmentFactory {
@@ -95,9 +105,9 @@ export class AppointmentFactory {
         }
 
         if (ageClass == "") {
-            return new Appointment(localTeam + " - " + foreignTeam, startDateTime, "ID: " + subLeague + "-" + matchNumber + "-" + round + "-" + startDateTime.year(), location, isCup, ageClass, categories);
+            return new Appointment(localTeam + " - " + foreignTeam, startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round);
         } else {
-            return new Appointment(localTeam + " - " + foreignTeam + " [" + ageClass + "]", startDateTime, "ID: " + subLeague + "-" + matchNumber + "-" + round + "-" + startDateTime.year(), location, isCup, ageClass, categories);
+            return new Appointment(localTeam + " - " + foreignTeam + " [" + ageClass + "]", startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round);
         }
     }
 
@@ -107,7 +117,6 @@ export class AppointmentFactory {
         const isCup = categories.some(category => 'Pokal' == category);
         let ageClass = "";
 
-        // Support both [age] and (age) for backward compatibility
         const bracketMatch = title.match(/\[(.*?)]/);
 
         if (bracketMatch) {
@@ -116,6 +125,6 @@ export class AppointmentFactory {
 
         const id = description.split("\n").find(line => line.startsWith('ID: ')) || "";
 
-        return new Appointment(title, startDateTime, id, location, isCup, ageClass, categories);
+        return new Appointment(title, startDateTime, location, isCup, ageClass, categories, "", 0, "", id);
     }
 }

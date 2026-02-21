@@ -223,6 +223,20 @@ class DAVAppointmentDecorator implements AppointmentInterface {
     constructor(readonly decoratedAppointment: AppointmentInterface, readonly calendarObject: DAVCalendarObject) {
     }
 
+    get subLeague(): string {
+        return this.decoratedAppointment.subLeague;
+    }
+    get matchNumber(): number {
+        return this.decoratedAppointment.matchNumber;
+    }
+    get round(): string {
+        return this.decoratedAppointment.round;
+    }
+
+    get description(): string {
+        return this.decoratedAppointment.description;
+    }
+
     get isCup(): boolean {
         return this.decoratedAppointment.isCup
     }
