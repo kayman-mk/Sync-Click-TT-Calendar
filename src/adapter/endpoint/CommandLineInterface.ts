@@ -26,6 +26,9 @@ export class CommandLineInterface {
     container.bindConfiguration(CONFIGURATION.CalendarUrl, parsedArguments.calendarUrl);
 
     // from environment
+    if (!process.env.CALENDAR_USERNAME || !process.env.CALENDAR_PASSWORD) {
+      throw new Error('Missing CALENDAR_USERNAME or CALENDAR_PASSWORD environment variable. Please set them in your .env file or environment.');
+    }
     container.bindConfiguration(CONFIGURATION.CalendarUsername, process.env.CALENDAR_USERNAME);
     container.bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
 
@@ -38,7 +41,9 @@ export class CommandLineInterface {
       container.bindConfiguration(CONFIGURATION.AppointmentFilename, parsedArguments.appointmentFile);
       await syncService.syncCalendarFromTtvnDownloadCsv(parsedArguments.appointmentFile!);
     } else {
-      await syncService.syncCalendarFromMyTischtennisWebpage(parsedArguments.mytischtennisUrl!);
+      // Create Team object from URL
+      const url = parsedArguments.mytischtennisUrl!;
+      await syncService.syncCalendarFromMyTischtennisWebpage(url);
     }
   }
 

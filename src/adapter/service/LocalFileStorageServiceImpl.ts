@@ -5,11 +5,11 @@ import { FileStorageService } from "../../domain/service/FileStorageService";
 @injectable()
 export class LocalFileStorageServiceImpl implements FileStorageService {
     readFile(filename: string): Buffer {
-        return Buffer.from(fs.readFileSync(`${filename}`, {encoding: 'latin1'}));
+        return Buffer.from(fs.readFileSync(`${filename}`, {encoding: 'utf-8'}));
     }
 
     writeFile(filename: string, content: string): void {
-        fs.writeFileSync(filename, content, { encoding: 'latin1' });
+        fs.writeFileSync(filename, content, { encoding: 'utf-8' });
     }
 
     deleteFile(filename: string): void {

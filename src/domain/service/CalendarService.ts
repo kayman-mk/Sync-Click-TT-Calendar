@@ -1,5 +1,5 @@
 import { ZonedDateTime } from "@js-joda/core";
-import { Appointment, AppointmentInterface } from "../model/appointment/Appointment";
+import { Appointment, AppointmentInterface } from "../model/Appointment";
 
 export interface CalendarService {
     createAppointment(appointment: Appointment): void;

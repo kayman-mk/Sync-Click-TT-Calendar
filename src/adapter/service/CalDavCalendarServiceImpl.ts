@@ -6,7 +6,7 @@ import { DateTimeFormatter, LocalDateTime, ZonedDateTime, ZoneId } from "@js-jod
 import { inject, injectable } from "inversify";
 import { DAVCalendar, DAVCalendarObject, DAVClient } from "tsdav";
 import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
-import { Appointment, AppointmentFactory, AppointmentInterface } from "../../domain/model/appointment/Appointment";
+import { Appointment, AppointmentFactory, AppointmentInterface } from "../../domain/model/Appointment";
 import { CalendarService } from "../../domain/service/CalendarService";
 import { LoggerImpl } from "../LoggerImpl";
 

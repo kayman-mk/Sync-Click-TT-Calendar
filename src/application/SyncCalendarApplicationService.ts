@@ -3,12 +3,14 @@ import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
 import { LoggerImpl } from "../adapter/LoggerImpl";
 import { SERVICE_IDENTIFIER } from "../dependency_injection";
-import { Appointment, AppointmentInterface } from "../domain/model/appointment/Appointment";
+import { Appointment, AppointmentInterface } from "../domain/model/Appointment";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
 import { CalendarService } from "../domain/service/CalendarService";
 import { FileStorageService } from "../domain/service/FileStorageService";
-import axios from "axios";
 import * as cheerio from "cheerio";
+import { SportsHallRepository } from "../domain/service/SportsHallRepository";
+import { Team } from "../domain/model/Team";
+import {Club} from "../domain/model/Club";
 
 @injectable()
 export class SyncCalendarApplicationService {
@@ -16,15 +18,18 @@ export class SyncCalendarApplicationService {
         @inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService,
         @inject(SERVICE_IDENTIFIER.CalendarService) readonly calendarService: CalendarService,
         @inject(SERVICE_IDENTIFIER.FileStorageService) readonly fileStorageService: FileStorageService,
-        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl
+        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl,
+        @inject(SERVICE_IDENTIFIER.SportsHallRepository) readonly sportsHallRepository: SportsHallRepository
     ) { }
 
     async syncCalendarFromMyTischtennisWebpage(clubUrl: string) {
         this.logger.info(`Downloading webpage from: ${clubUrl}`);
 
         // Download the webpage
-        const response = await axios.get(clubUrl);
-        const html = response.data;
+        //const response = await axios.get(clubUrl);
+        //const html = response.data;
+        const html = this.fileStorageService.readFile('spielplan.html');
+        //this.fileStorageService.writeFile(`spielplan.html`, html);
 
         // Parse the HTML table using cheerio
         const $ = cheerio.load(html);
@@ -43,85 +48,95 @@ export class SyncCalendarApplicationService {
 
         this.logger.info(`Found table, parsing rows...`);
 
-        // Parse the table rows from tbody
+        // Parse the table rows from tbody and collect row data for async processing
+        const rowData: any[] = [];
         table.find('tbody tr').each((index, element) => {
             const cells = $(element).find('td');
             if (cells.length === 0) return; // Skip empty rows
 
             // Extract raw date and time from myTischtennis.de table
-            // The date format is "Mo., 25.08.2025" and time is typically in a separate cell or combined
-            const rawDate = $(cells[0]).text().trim(); // e.g., "Mo., 25.08.2025"
-            const rawTime = $(cells[1]).text().trim(); // e.g., "19:00" or might be part of cell 0
+            const rawDate = $(cells[0]).text().trim();
+            const rawTime = $(cells[1]).text().trim();
+            if (rawDate == "Termin offen") return;
 
-            if (rawDate == "Termin offen") return; // Skip rows with open date
-
-            // Parse date: remove day-of-week prefix (e.g., "Mo., " or "Di., ")
-            // Date format from myTischtennis: "Mo., 25.08.2025" -> "25.08.2025"
             const dateRegex = /(\d{2}\.\d{2}\.\d{4})/;
             const dateMatch = dateRegex.exec(rawDate);
             const date = dateMatch ? dateMatch[1] : rawDate;
             const month = parseInt(date.split('.')[1], 10);
 
-            // Try to extract time if it's in the date cell or use the second cell
-            // Note: Trailing "v" means the appointment was moved (verlegt in German)
             let time = rawTime;
             const timeRegex = /(\d{2}:\d{2})/;
             const timeMatch = timeRegex.exec(rawDate);
             if (timeMatch) {
                 time = timeMatch[1];
             } else if (time && timeRegex.test(time)) {
-                // Extract just the time part, removing any trailing characters like "v" (moved appointment)
                 const rawTimeMatch = timeRegex.exec(time);
                 time = rawTimeMatch ? rawTimeMatch[1] : time;
             } else {
-                // Default time if not found
                 time = "00:00";
                 this.logger.warning(`No valid time found for date ${date}, using default ${time}`);
             }
-
-            // Combine date and time in the format expected by CSV parser: "dd.MM.yyyy HH:mm"
             const termin = `${date} ${time}`;
 
-            // Map myTischtennis.de table structure to Click-TT CSV format
-            // Based on observed structure: Date, Time, Round/Match#, League/Team info, Team/Venue info, Score
-            // myTischtennis.de typically has: Date | Time | League/Group | Home Team | Guest Team | Venue | ...
-            // But structure may vary, so we'll extract what's available
+            const halleName = $(cells[2]).text().trim();
+            const staffel = $(cells[3]).text().trim();
+            // HeimMannschaft: extract <a> if present
+            let heimMannschaft = $(cells[4]).text().trim();
+            let team: Team | undefined = undefined;
+            const heimMannschaftLink = $(cells[4]).find('a');
+            if (heimMannschaftLink.length > 0) {
+                heimMannschaft = heimMannschaftLink.text().trim();
+                const href = heimMannschaftLink.attr('href');
+                if (href) {
+                    // If the link is relative, resolve it against the clubUrl
+                    let resolvedUrl = href.startsWith('http') ? href : new URL(href, clubUrl).href;
+                    // Remove the last path segment
+                    try {
+                        const urlObj = new URL(resolvedUrl);
+                        urlObj.pathname = urlObj.pathname.replace(/\/?[^\/]+\/?$/, '/');
+                        resolvedUrl = urlObj.toString().replace(/\/$/, ''); // Remove trailing slash
+                    } catch {}
+                    team = new Team(heimMannschaft, resolvedUrl);
+                }
+            }
+            const gastMannschaft = $(cells[5]).text().trim();
+            rowData.push({termin, halleName, staffel, heimMannschaft, gastMannschaft, month, team});
+        });
 
-            // Try to extract available fields with fallbacks
-            const halleName = $(cells[2]).text().trim(); // Halle
-            const staffel = $(cells[3]).text().trim(); // Could be Staffel or team name
-            const heimMannschaft = $(cells[4]).text().trim(); // Could be home team
-            const gastMannschaft = $(cells[5]).text().trim(); // Could be guest
-
-            // Build CSV row
-            const halleStrasse = ''; // Not available in myTischtennis.de table, could be extracted from venue info if available
-            const halleOrt = '';
-            const hallePLZ = '';
-            // Determine round type based on calendar month:
-            // In the German table tennis season, the Vorrunde (VR, first half of the season) is played in the
-            // second half of the calendar year, and the Rückrunde (RR, second half of the season) is played
-            // in the first months of the following year. Therefore, matches in months 1–4 (Jan–Apr) belong
-            // to the RR, all other months map to VR. Pokal (cup) matches are marked separately via "KP".
-            const runde = staffel.startsWith("KP") ? "Pokal" : (month >= 1 && month <= 4 ? "RR" : "VR" );
-            const begegnungNr = `${heimMannschaft}-${gastMannschaft}-${staffel}-${runde}`;
+        // Async process each row to fill address fields
+        for (const row of rowData) {
+            let halleStrasse = '', halleOrt = '', hallePLZ = '', halleNameFinal = row.halleName;
+            let club: Club = { name: row.team?.getClubName(), url: row.team.url };
+            if (row.heimMannschaft && row.halleName && club) {
+                const hallNumMatch = row.halleName.match(/Spiellokal\s*(\d+)/);
+                const sportshallNumber = hallNumMatch ? Number.parseInt(hallNumMatch[1], 10) : 1;
+                const sportsHall = await this.sportsHallRepository.findByClubAndSportshall(club, sportshallNumber);
+                if (sportsHall) {
+                    halleStrasse = `${sportsHall.street} ${sportsHall.houseNumber}`.trim();
+                    halleOrt = sportsHall.city;
+                    hallePLZ = sportsHall.postalCode;
+                    halleNameFinal = sportsHall.name;
+                }
+            }
+            const runde = row.staffel.startsWith("KP") ? "Pokal" : (row.month >= 1 && row.month <= 4 ? "RR" : "VR" );
+            const begegnungNr = `${row.heimMannschaft}-${row.gastMannschaft}-${row.staffel}-${runde}`;
 
             let altersklasse = '';
-            if (staffel.endsWith("E")) {
+            if (row.staffel.endsWith("E")) {
                 altersklasse = ""; // Erwachsene
-            } else if (staffel.includes("mJ") || staffel.includes("wJ")) {
-                // extract from mJ to the end
-                if (staffel.includes("mJ")) {
-                    altersklasse = staffel.substring(staffel.indexOf("mJ"));
+            } else if (row.staffel.includes("mJ") || row.staffel.includes("wJ")) {
+                if (row.staffel.includes("mJ")) {
+                    altersklasse = row.staffel.substring(row.staffel.indexOf("mJ"));
                 } else {
-                    altersklasse = staffel.substring(staffel.indexOf("wJ"));
+                    altersklasse = row.staffel.substring(row.staffel.indexOf("wJ"));
                 }
-            } else if (staffel.includes("J")) {
-                altersklasse = staffel.substring(staffel.indexOf("J"));
+            } else if (row.staffel.includes("J")) {
+                altersklasse = row.staffel.substring(row.staffel.indexOf("J"));
             }
 
-            const csvRow = `${termin};${staffel};${runde};${heimMannschaft};${halleStrasse};${halleOrt};${hallePLZ};${halleName};${gastMannschaft};${gastMannschaft};${begegnungNr};${altersklasse}`;
+            const csvRow = `${row.termin};${row.staffel};${runde};${row.heimMannschaft};${halleStrasse};${halleOrt};${hallePLZ};${halleNameFinal};${row.gastMannschaft};${row.gastMannschaft};${begegnungNr};${altersklasse}`;
             csvRows.push(csvRow);
-        });
+        }
 
         if (csvRows.length <= 1) {
             this.logger.error('No data rows found in the table');
