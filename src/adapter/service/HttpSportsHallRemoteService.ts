@@ -1,20 +1,24 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { SportsHall } from "../../domain/model/SportsHall";
 import { Club } from "../../domain/model/Club";
 import { SportsHallRemoteService } from "../../domain/service/SportsHallRemoteService";
-import axios from "axios";
+import { WebPageService } from "../../domain/service/WebPageService";
+import { SERVICE_IDENTIFIER } from "../../dependency_injection";
 import * as cheerio from "cheerio";
 
 /**
- * Implementation of SportsHallRemoteService using HTTP GET and JSON response.
- * Assumes the remote endpoint returns an array of SportsHall objects.
+ * Implementation of SportsHallRemoteService that fetches and parses HTML content.
+ * Uses WebPageService to handle HTTP communication in a decoupled manner.
  */
 @injectable()
 export class HttpSportsHallRemoteService implements SportsHallRemoteService {
+    constructor(
+        @inject(SERVICE_IDENTIFIER.WebPageService) private readonly webPageService: WebPageService
+    ) {}
+
     async fetchSportsHalls(club: Club): Promise<SportsHall[]> {
         try {
-            const response = await axios.get(`${club.url}/info`);
-            const html = response.data;
+            const html = await this.webPageService.fetchPage(`${club.url}/info`);
             const $ = cheerio.load(html);
             const halls: SportsHall[] = [];
             // Find the Adressen section by <h2>
@@ -64,7 +68,8 @@ export class HttpSportsHallRemoteService implements SportsHallRemoteService {
             });
             return halls;
         } catch (err) {
-            console.error(`Failed to fetch sports halls from ${club.url}/info:`, err);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            console.error(`Failed to fetch sports halls from ${club.url}/info: ${errorMessage}`);
             throw err;
         }
     }

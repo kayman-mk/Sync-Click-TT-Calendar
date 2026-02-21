@@ -81,7 +81,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                     }
 
                     // Check for required columns
-                    const requiredFields = [data.Termin, data.Staffel, data.Runde, data.HeimMannschaft, data.GastMannschaft, data.BegegnungNr, data.Altersklasse];
+                    const requiredFields = [data.Termin, data.Staffel, data.Runde, data.HeimMannschaft, data.GastMannschaft, data.BegegnungNr];
                     if (requiredFields.some(field => field === undefined || field === '')) {
                         this.logger.warning("Skipping row due to missing required columns.");
                         return;

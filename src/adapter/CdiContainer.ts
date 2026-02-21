@@ -13,6 +13,8 @@ import { SportsHallRepository } from "../domain/service/SportsHallRepository";
 import { FileSportsHallRepositoryImpl } from "./service/FileSportsHallRepositoryImpl";
 import { SportsHallRemoteService } from "../domain/service/SportsHallRemoteService";
 import { HttpSportsHallRemoteService } from "./service/HttpSportsHallRemoteService";
+import { WebPageService } from "../domain/service/WebPageService";
+import { AxiosWebPageService } from "./service/AxiosWebPageService";
 import winston from "winston";
 
 export class CdiContainer {
@@ -38,6 +40,7 @@ export class CdiContainer {
         this.container.bind<CalendarService>(SERVICE_IDENTIFIER.CalendarService).to(CalDavCalendarServiceImpl).inSingletonScope();
         this.container.bind<FileStorageService>(SERVICE_IDENTIFIER.FileStorageService).to(LocalFileStorageServiceImpl).inSingletonScope();
         this.container.bind<SportsHallRepository>(SERVICE_IDENTIFIER.SportsHallRepository).to(FileSportsHallRepositoryImpl).inSingletonScope();
+        this.container.bind<WebPageService>(SERVICE_IDENTIFIER.WebPageService).to(AxiosWebPageService).inSingletonScope();
         this.container.bind<SportsHallRemoteService>(SERVICE_IDENTIFIER.SportsHallRemoteService).to(HttpSportsHallRemoteService).inSingletonScope();
         this.container.bind<LoggerImpl>(SERVICE_IDENTIFIER.Logger).toConstantValue(new LoggerImpl(new winston.transports.Console()));
     }
