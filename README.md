@@ -50,11 +50,27 @@ Command line parameters (mutually exclusive):
 ## Features
 ### Done
 - synchronise your CalDav calendar with the appointments from Click-TT
+- abstracted web page fetching service with axios for decoupled HTTP communication
 
 ### planned
 - set the organizer of the appointment to the team lead
 
+## Architecture & Services
+
+### WebPageService
+The `WebPageService` is an abstraction layer for fetching remote web pages using HTTP. It provides:
+
+- **WebPageService Interface** (`src/domain/service/WebPageService.ts`): Defines the contract for web page fetching operations
+- **AxiosWebPageService** (`src/adapter/service/AxiosWebPageService.ts`): Axios-based implementation with:
+  - Automatic error handling with descriptive messages
+  - Support for custom HTTP headers
+  - 10-second request timeout
+  - Proper HTTP status code validation
+
+This design follows the Dependency Inversion Principle, allowing the business logic (HttpSportsHallRemoteService) to depend on abstractions rather than concrete HTTP implementations.
+
 ## Credits
+- [Axios](https://github.com/axios/axios) - Promise-based HTTP client
 - [CSV-Parser](https://github.com/mafintosh/csv-parser) - to parse CSV files
 - [Ical](https://github.com/kewisch/ical.js) - to parse ics calendar events from a calendar
 - [Ics](https://github.com/adamgibbons/ics) - to handle ics calendar events

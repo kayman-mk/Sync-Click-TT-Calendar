@@ -7,7 +7,8 @@ export const SERVICE_IDENTIFIER = {
     FileStorageService: Symbol.for("FileStorageService"),
     Logger: Symbol.for("Logger"),
     SportsHallRepository: Symbol.for("SportsHallRepository"),
-    SportsHallRemoteService: Symbol.for("SportsHallRemoteService")
+    SportsHallRemoteService: Symbol.for("SportsHallRemoteService"),
+    WebPageService: Symbol.for("WebPageService")
 };
 
 export const CONFIGURATION = {
