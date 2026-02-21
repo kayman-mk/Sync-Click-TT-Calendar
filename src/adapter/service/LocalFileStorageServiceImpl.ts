@@ -1,20 +1,18 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import { injectable } from "inversify";
 import { FileStorageService } from "../../domain/service/FileStorageService";
 
 @injectable()
 export class LocalFileStorageServiceImpl implements FileStorageService {
-    readFile(filename: string): Buffer {
-        return Buffer.from(fs.readFileSync(`${filename}`, {encoding: 'utf-8'}));
+    async readFile(filename: string): Promise<string> {
+        return fs.promises.readFile(filename, {encoding: 'utf-8'});
     }
 
-    writeFile(filename: string, content: string): void {
-        fs.writeFileSync(filename, content, { encoding: 'utf-8' });
+    async writeFile(filename: string, content: string): Promise<void> {
+        await fs.promises.writeFile(filename, content, { encoding: 'utf-8' });
     }
 
-    deleteFile(filename: string): void {
-        if (fs.existsSync(filename)) {
-            fs.unlinkSync(filename);
-        }
+    async deleteFile(filename: string): Promise<void> {
+        await fs.promises.unlink(filename);
     }
 }

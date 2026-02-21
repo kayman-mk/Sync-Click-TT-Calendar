@@ -28,7 +28,7 @@ export class SyncCalendarApplicationService {
         // Download the webpage
         //const response = await axios.get(clubUrl);
         //const html = response.data;
-        const html = this.fileStorageService.readFile('spielplan.html');
+        const html = await this.fileStorageService.readFile('spielplan.html');
         //this.fileStorageService.writeFile(`spielplan.html`, html);
 
         // Parse the HTML table using cheerio

@@ -57,8 +57,8 @@ export class FileSportsHallRepositoryImpl implements SportsHallRepository {
     async getAll(): Promise<SportsHall[]> {
         try {
             const content = await this.fileStorageService.readFile(this.fileName);
-            // FileStorageService.readFile always returns Buffer, so convert to string
-            return JSON.parse(content.toString());
+            // FileStorageService.readFile returns a string
+            return JSON.parse(content);
         } catch (err: any) {
             if (err && (err.code === 'ENOENT' || err.message?.includes('not found'))) {
                 return [];

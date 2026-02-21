@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { SERVICE_IDENTIFIER } from '../../dependency_injection';
 import { LoggerImpl } from '../LoggerImpl';
 import { FileStorageService } from '../../domain/service/FileStorageService';
-import { Readable } from 'stream';
+import { Readable } from 'node:stream';
 import { DateTimeFormatter, LocalDateTime } from '@js-joda/core';
 
 /**
@@ -27,7 +27,7 @@ type ClickTtCsvFile = {
     /**
      * In case no match is planned for one round it is indicated with "spielfrei"
      */
-    GastVereinName: "spielfrei" | string
+    GastVereinName: string
     /**
      * Names the complete address: HalleName, HalleStrasse, HallePLZ and HalleOrt
      */
@@ -61,9 +61,10 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
     async parseAppointments(filename: string): Promise<Set<AppointmentInterface>> {
         const appointments: Set<AppointmentInterface> = new Set();
         const csvDateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        const csvContent = await this.fileStorageService.readFile(`${filename}`);
 
         return new Promise((resolve, reject) => {
-            Readable.from(this.fileStorageService.readFile(`${filename}`))
+            Readable.from([csvContent])
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data: ClickTtCsvFile) => {
                     // Clean the datetime string: remove trailing characters like "v" (indicating moved appointments)
@@ -75,7 +76,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
 
                     // Remove trailing non-time characters (like "v" for "verlegt" = moved)
                     // Keep only: dd.MM.yyyy HH:mm
-                    const dateTimeMatch = cleanedTermin.match(/(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/);
+                    const dateTimeMatch = new RegExp(/(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/).exec(cleanedTermin);
                     if (dateTimeMatch) {
                         cleanedTermin = dateTimeMatch[1];
                     }

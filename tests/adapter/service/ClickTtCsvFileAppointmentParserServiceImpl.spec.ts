@@ -14,15 +14,15 @@ const emptyHalleAppointment = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;
 class TestFileStorageService implements FileStorageService {
     constructor(private readonly fileContent: string) {}
 
-    readFile(filename: string): Buffer {
-        return Buffer.from(this.fileContent)
+    async readFile(filename: string): Promise<string> {
+        return this.fileContent;
     }
 
-    writeFile(filename: string, content: string): void {
+    async writeFile(filename: string, content: string): Promise<void> {
         // No-op for tests
     }
 
-    deleteFile(filename: string): void {
+    async deleteFile(filename: string): Promise<void> {
         // No-op for tests
     }
 }
