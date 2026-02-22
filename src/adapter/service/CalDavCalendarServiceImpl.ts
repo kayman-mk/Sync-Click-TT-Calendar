@@ -226,9 +226,11 @@ class DAVAppointmentDecorator implements AppointmentInterface {
     get subLeague(): string {
         return this.decoratedAppointment.subLeague;
     }
+
     get matchNumber(): number {
         return this.decoratedAppointment.matchNumber;
     }
+
     get round(): string {
         return this.decoratedAppointment.round;
     }

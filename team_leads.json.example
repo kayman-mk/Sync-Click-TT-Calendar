@@ -1,0 +1,28 @@
+[
+  {
+    "name": "John",
+    "surname": "Smith",
+    "teamName": "Herren I"
+  },
+  {
+    "name": "Maria",
+    "surname": "Mueller",
+    "teamName": "Damen I"
+  },
+  {
+    "name": "Michael",
+    "surname": "Schneider",
+    "teamName": "Jugend M12"
+  },
+  {
+    "name": "Anna",
+    "surname": "Weber",
+    "teamName": "Jugend W12"
+  },
+  {
+    "name": "Thomas",
+    "surname": "Fischer",
+    "teamName": "Herren II"
+  }
+]
+
