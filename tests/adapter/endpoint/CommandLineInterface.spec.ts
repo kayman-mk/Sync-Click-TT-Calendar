@@ -6,6 +6,7 @@ describe('CommandLineInterface', () => {
     beforeEach(() => {
         process.env.CALENDAR_USERNAME = "user";
         process.env.CALENDAR_PASSWORD = "password";
+        process.env.CLUBNAME = "SC Test";
     });
 
     it('should_accept_appointment_file_parameter_when_provided', async () => {
@@ -65,6 +66,51 @@ describe('CommandLineInterface', () => {
         // when / then
         await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
             'Please provide either --appointment-file or --mytischtennis-url'
+        );
+    });
+
+    it('should_throw_error_when_clubname_not_set', async () => {
+        // given
+        delete process.env.CLUBNAME;
+        const givenArguments = ["-f", "x.csv", "-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Missing CLUBNAME environment variable. Please set it in your .env file or environment.'
+        );
+    });
+
+    it('should_throw_error_when_calendar_username_not_set', async () => {
+        // given
+        delete process.env.CALENDAR_USERNAME;
+        const givenArguments = ["-f", "x.csv", "-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Missing CALENDAR_USERNAME or CALENDAR_PASSWORD environment variable. Please set them in your .env file or environment.'
+        );
+    });
+
+    it('should_throw_error_when_calendar_password_not_set', async () => {
+        // given
+        delete process.env.CALENDAR_PASSWORD;
+        const givenArguments = ["-f", "x.csv", "-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Missing CALENDAR_USERNAME or CALENDAR_PASSWORD environment variable. Please set them in your .env file or environment.'
+        );
+    });
+
+    it('should_throw_error_when_both_calendar_credentials_not_set', async () => {
+        // given
+        delete process.env.CALENDAR_USERNAME;
+        delete process.env.CALENDAR_PASSWORD;
+        const givenArguments = ["-f", "x.csv", "-c", "https://under-test.local"];
+
+        // when / then
+        await expect(new CommandLineInterface().main(givenArguments)).rejects.toThrow(
+            'Missing CALENDAR_USERNAME or CALENDAR_PASSWORD environment variable. Please set them in your .env file or environment.'
         );
     });
 });
