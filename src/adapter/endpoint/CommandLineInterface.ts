@@ -29,8 +29,12 @@ export class CommandLineInterface {
     if (!process.env.CALENDAR_USERNAME || !process.env.CALENDAR_PASSWORD) {
       throw new Error('Missing CALENDAR_USERNAME or CALENDAR_PASSWORD environment variable. Please set them in your .env file or environment.');
     }
+    if (!process.env.CLUBNAME) {
+      throw new Error('Missing CLUBNAME environment variable. Please set it in your .env file or environment.');
+    }
     container.bindConfiguration(CONFIGURATION.CalendarUsername, process.env.CALENDAR_USERNAME);
     container.bindConfiguration(CONFIGURATION.CalendarPassword, process.env.CALENDAR_PASSWORD);
+    container.bindConfiguration(CONFIGURATION.ClubName, process.env.CLUBNAME);
 
     container.startContainer();
 

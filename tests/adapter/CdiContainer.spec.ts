@@ -13,6 +13,7 @@ describe('CDI Container', () => {
         container.bindConfiguration(CONFIGURATION.CalendarUrl, 'https://caldav.local/');
         container.bindConfiguration(CONFIGURATION.CalendarUsername, 'caldav-user');
         container.bindConfiguration(CONFIGURATION.CalendarPassword, 'caldav-password');
+        container.bindConfiguration(CONFIGURATION.ClubName, 'SC Kleckersdorf');
 
         // when
         container.startContainer()

@@ -5,5 +5,6 @@ target/
 .env
 spielplan.html
 sports_halls.json
+team_leads.json
 
 temp-appointments-*.csv

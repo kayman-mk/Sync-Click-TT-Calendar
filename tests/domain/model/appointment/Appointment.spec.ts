@@ -1,7 +1,9 @@
 import { LocalDate, LocalTime, LocalDateTime } from "@js-joda/core";
 import { Appointment, AppointmentFactory } from "../../../../src/domain/model/Appointment";
+import { TeamLead } from "../../../../src/domain/model/TeamLead";
 
 const startDateTime = LocalDateTime.of(LocalDate.of(2023, 1, 1), LocalTime.of(20, 15, 0));
+const defaultTeamLead = new TeamLead("Test Lead", "Test Team", "", "", "");
 
 describe('Appointment Factory: from CSV', () => {
     it('should have a title equal to "local - foreign [age]"', () => {
@@ -15,7 +17,8 @@ describe('Appointment Factory: from CSV', () => {
             location: 'location',
             ageClass: 'age',
             isCup: true,
-            round: 'Pokal'
+            round: 'Pokal',
+            teamLead: defaultTeamLead
         });
         // then
         expect(actualAppointment.title).toEqual("local - remote [age]");
@@ -32,17 +35,18 @@ describe('Appointment Factory: from CSV', () => {
             location: 'location',
             ageClass: 'age',
             isCup: true,
-            round: 'Pokal'
+            round: 'Pokal',
+            teamLead: defaultTeamLead
         });
         // then
-        expect(actualAppointment.id).toEqual("ID: 3. KK West-5-Pokal-2023");
+        expect(actualAppointment.id).toEqual("3. KK West-5-Pokal-2023");
     })
 })
 
 describe('AppointmentFactory: from calendar entry', () => {
     it('should extract cup information from category "Pokal"', () => {
         //when
-        const actualAppointment = AppointmentFactory.createFromCalendar("A - B (age)", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Click-TT", "Pokal"])
+        const actualAppointment = AppointmentFactory.createFromCalendar("A - B (age)", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Click-TT", "Pokal"], defaultTeamLead)
 
         //then
         expect(actualAppointment.isCup).toBeTruthy()
@@ -51,7 +55,7 @@ describe('AppointmentFactory: from calendar entry', () => {
     it('should accept Click-TT appointments only', () => {
         //when
         const actualCreator = () => {
-            AppointmentFactory.createFromCalendar("A - B (age)", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Pokal"])
+            AppointmentFactory.createFromCalendar("A - B (age)", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Pokal"], defaultTeamLead)
         }
 
         //then
@@ -60,7 +64,7 @@ describe('AppointmentFactory: from calendar entry', () => {
 
     it('should extract the age class from summary', () => {
         //when
-        const actualAppointment = AppointmentFactory.createFromCalendar("A (SG) - B [age]", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Click-TT", "Pokal"])
+        const actualAppointment = AppointmentFactory.createFromCalendar("A (SG) - B [age]", startDateTime, "ID: subleague-4-Pokal-2023", "location", ["Click-TT", "Pokal"], defaultTeamLead)
 
         //then
         expect(actualAppointment.ageClass).toEqual("age");
@@ -68,17 +72,17 @@ describe('AppointmentFactory: from calendar entry', () => {
 
     it('should extract the event id from the description', () => {
         //when
-        const actualAppointment = AppointmentFactory.createFromCalendar("A (SG) - B (age)", startDateTime, "Some text here\nand there\nID: subleague-4-Pokal-2023\nsome more", "location", ["Click-TT", "Pokal"])
+        const actualAppointment = AppointmentFactory.createFromCalendar("A (SG) - B (age)", startDateTime, "Some text here\nand there\nID: subleague-4-Pokal-2023\nsome more", "location", ["Click-TT", "Pokal"], defaultTeamLead)
 
         //then
-        expect(actualAppointment.id).toEqual("ID: subleague-4-Pokal-2023");
+        expect(actualAppointment.id).toEqual("subleague-4-Pokal-2023");
     })
 })
 
 describe('Appointment', () => {
     it('should assign category "Pokal" to cup games', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, 'ID: a-5-Liga-2023')
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Liga-2023', defaultTeamLead)
 
         // then
         expect(actualAppointment.categories).toContain("Pokal")
@@ -86,7 +90,7 @@ describe('Appointment', () => {
 
     it('should assign category "Liga" to non cup games', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'location', false, 'age', ["Click-TT", "Liga", "age"], "", 0, "", 'ID: a-5-Liga-2023')
+        const actualAppointment = new Appointment('title', startDateTime, 'location', false, 'age', ["Click-TT", "Liga", "age"], "", 0, "", 'ID: a-5-Liga-2023', defaultTeamLead)
 
         // then
         expect(actualAppointment.categories).toContain("Liga")
@@ -94,7 +98,7 @@ describe('Appointment', () => {
 
     it('should always assign Click-TT category', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023')
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // then
         expect(actualAppointment.categories).toContain("Click-TT")
@@ -102,7 +106,7 @@ describe('Appointment', () => {
 
     it('should assign the ageClass as category', () => {
         // when
-        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023')
+        const actualAppointment = new Appointment('title', startDateTime, 'location', true, 'age', ["Click-TT", "Pokal", "age"], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // then
         expect(actualAppointment.categories).toContain("age")
@@ -126,8 +130,8 @@ describe('Appointment', () => {
 
     it('should report objects as same', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023')
-        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', ["Jugend"], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -138,8 +142,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if title changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title 1', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
-        const givenAppointment2 = new Appointment('title 2', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment1 = new Appointment('title 1', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
+        const givenAppointment2 = new Appointment('title 2', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -150,8 +154,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if date/time changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
-        const givenAppointment2 = new Appointment('title', startDateTime.plusDays(1), 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
+        const givenAppointment2 = new Appointment('title', startDateTime.plusDays(1), 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -162,8 +166,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if location changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'location 1', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023',)
-        const givenAppointment2 = new Appointment('title', startDateTime, 'location 2', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023',)
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location 1', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location 2', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -174,8 +178,8 @@ describe('Appointment', () => {
 
     it('should identify a modified appointment if age class changed', () => {
         // given
-        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age 1', [], "", 0, "", 'ID: a-5')
-        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age 2', [], "", 0, "", 'ID: a-5')
+        const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age 1', [], "", 0, "", 'ID: a-5', defaultTeamLead)
+        const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age 2', [], "", 0, "", 'ID: a-5', defaultTeamLead)
 
         // when
         const actualIsSameAs = givenAppointment1.isSameAs(givenAppointment2);
@@ -188,8 +192,8 @@ describe('Appointment', () => {
         //when
         const actualComparator = () => {
             // given
-            const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023')
-            const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-6-Pokal-2023')
+            const givenAppointment1 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-5-Pokal-2023', defaultTeamLead)
+            const givenAppointment2 = new Appointment('title', startDateTime, 'location', true, 'age', [], "", 0, "", 'ID: a-6-Pokal-2023', defaultTeamLead)
 
             // when
             givenAppointment1.isSameAs(givenAppointment2)
@@ -211,7 +215,8 @@ describe('Appointment', () => {
             "",
             0,
             "",
-            'ID: test-1-2023'
+            'ID: test-1-2023',
+            defaultTeamLead
         );
         // when
         const str = appointment.toString();

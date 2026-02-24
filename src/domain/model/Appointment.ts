@@ -1,5 +1,6 @@
 import { LocalDateTime } from '@js-joda/core';
 import assert from 'node:assert';
+import { TeamLead } from './TeamLead';
 
 export interface AppointmentInterface {
     get ageClass(): string
@@ -13,6 +14,7 @@ export interface AppointmentInterface {
     get subLeague(): string
     get matchNumber(): number
     get round(): string
+    get teamLead(): TeamLead
 
     /**
      * Checks if the appointment differs from compareTo
@@ -38,9 +40,22 @@ export class Appointment implements AppointmentInterface {
         return categories.find(category => Appointment.CLICK_TT_CATEGORY == category) == Appointment.CLICK_TT_CATEGORY
     }
 
-    constructor(readonly title: string, readonly startDateTime: LocalDateTime, readonly location: string, readonly isCup: boolean, readonly ageClass: string, readonly categories: string[], readonly subLeague: string, readonly matchNumber: number, readonly round: string, readonly id: string = "") {
+    /**
+     * Determines the competition round (VR or RR) based on the date.
+     * VR (Vorrunde/first half): January-April (months 1-4)
+     * RR (Rückrunde/second half): May-December (months 5-12)
+     *
+     * @param date The date to determine the round for
+     * @returns 'VR' for months 1-4, 'RR' for months 5-12
+     */
+    static getRunde(date: LocalDateTime): string {
+        const month = date.monthValue();
+        return month >= 1 && month <= 4 ? 'VR' : 'RR';
+    }
+
+    constructor(readonly title: string, readonly startDateTime: LocalDateTime, readonly location: string, readonly isCup: boolean, readonly ageClass: string, readonly categories: string[], readonly subLeague: string, readonly matchNumber: number, readonly round: string, readonly id: string = "", readonly teamLead: TeamLead) {
         if (id == "") {
-            this.id = "ID: " + this.subLeague + "-" + this.matchNumber + "-" + this.round + "-" + this.startDateTime.year();
+            this.id = this.subLeague + "-" + this.matchNumber + "-" + this.round + "-" + this.startDateTime.year();
         }
     }
 
@@ -56,6 +71,7 @@ export class Appointment implements AppointmentInterface {
         if (this.location != compareTo.location) differences.push(`location: "${this.location}" != "${compareTo.location}"`);
         if (this.isCup != compareTo.isCup) differences.push(`isCup: ${this.isCup} != ${compareTo.isCup}`);
         if (this.categories.toString() != compareTo.categories.toString()) differences.push(`categories: [${this.categories.join(', ')}] != [${compareTo.categories.join(', ')}]`);
+        if (this.teamLead.fullName != compareTo.teamLead.fullName) differences.push(`teamLead: "${this.teamLead.fullName}" != "${compareTo.teamLead.fullName}"`);
 
         if (differences.length > 0) {
             console.log(`Appointment differences for id="${this.id}": ${differences.join('; ')}`);
@@ -73,7 +89,7 @@ export class Appointment implements AppointmentInterface {
     }
 
     get description(): string {
-        return `ID: ${this.id}\nCategories: ${this.categories.join(', ')}`;
+        return `Mannschaftsführer: ${this.teamLead.fullName}\n\nKategorien: ${this.categories.join(', ')}\n\nID: ${this.id}`;
     }
 }
 
@@ -87,9 +103,10 @@ export class AppointmentFactory {
         location: string,
         ageClass: string,
         isCup: boolean,
-        round: string
+        round: string,
+        teamLead: TeamLead
     }): AppointmentInterface {
-        const { localTeam, foreignTeam, startDateTime, subLeague, matchNumber, location, ageClass, isCup, round } = params;
+        const { localTeam, foreignTeam, startDateTime, subLeague, matchNumber, location, ageClass, isCup, round, teamLead } = params;
         let categories = [Appointment.CLICK_TT_CATEGORY, isCup ? "Pokal" : "Liga"];
 
         if (subLeague.endsWith("D")) {
@@ -100,18 +117,18 @@ export class AppointmentFactory {
             categories.push("Jugend");
         }
 
-        if (ageClass != "") {
+        if (ageClass != "" && !subLeague.endsWith("D")) {
             categories.push(ageClass);
         }
 
         if (ageClass == "") {
-            return new Appointment(localTeam + " - " + foreignTeam, startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round);
+            return new Appointment(localTeam + " - " + foreignTeam, startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round, "", teamLead);
         } else {
-            return new Appointment(localTeam + " - " + foreignTeam + " [" + ageClass + "]", startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round);
+            return new Appointment(localTeam + " - " + foreignTeam + " [" + ageClass + "]", startDateTime, location, isCup, ageClass, categories, subLeague, matchNumber, round, "", teamLead);
         }
     }
 
-    static createFromCalendar(title: string, startDateTime: LocalDateTime, description: string, location: string, categories: string[]): AppointmentInterface {
+    static createFromCalendar(title: string, startDateTime: LocalDateTime, description: string, location: string, categories: string[], teamLead: TeamLead): AppointmentInterface {
         assert(Appointment.isFromClickTT(categories), "needs an appointment based on Click-TT")
 
         const isCup = categories.some(category => 'Pokal' == category);
@@ -123,8 +140,8 @@ export class AppointmentFactory {
             ageClass = bracketMatch[1];
         }
 
-        const id = description.split("\n").find(line => line.startsWith('ID: ')) || "";
+        const id = description.split("\n").find(line => line.startsWith('ID: '))?.replace("ID: ", "") || "";
 
-        return new Appointment(title, startDateTime, location, isCup, ageClass, categories, "", 0, "", id);
+        return new Appointment(title, startDateTime, location, isCup, ageClass, categories, "", 0, "", id, teamLead);
     }
 }

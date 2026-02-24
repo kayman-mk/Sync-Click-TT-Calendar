@@ -8,6 +8,8 @@ import { DAVCalendar, DAVCalendarObject, DAVClient } from "tsdav";
 import { CONFIGURATION, SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { Appointment, AppointmentFactory, AppointmentInterface } from "../../domain/model/Appointment";
 import { CalendarService } from "../../domain/service/CalendarService";
+import { TeamLeadRepository } from "../../domain/service/TeamLeadRepository";
+import { TeamLead } from "../../domain/model/TeamLead";
 import { LoggerImpl } from "../LoggerImpl";
 
 /**
@@ -17,9 +19,10 @@ import { LoggerImpl } from "../LoggerImpl";
 export class CalDavCalendarServiceImpl implements CalendarService {
     private readonly client: DAVClient;
     private readonly logger: LoggerImpl;
+    private readonly teamLeadRepository: TeamLeadRepository;
     private calendar: DAVCalendar | undefined;
 
-    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl) {
+    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl, @inject(SERVICE_IDENTIFIER.TeamLeadRepository) teamLeadRepository: TeamLeadRepository) {
         this.client = new DAVClient({
             serverUrl: this.url,
             credentials: {
@@ -31,6 +34,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
         });
 
         this.logger = logger;
+        this.teamLeadRepository = teamLeadRepository;
     }
 
     private async findCalendar(urlToFind: string): Promise<DAVCalendar> {
@@ -79,7 +83,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
         const result: Set<AppointmentInterface> = new Set();
 
-        calendarObjects.forEach(calendarAppointment => {
+        for (const calendarAppointment of calendarObjects) {
             let vcalendar = new ICAL.Component(ICAL.parse(calendarAppointment.data));
             let vevent = vcalendar.getFirstSubcomponent('vevent');
 
@@ -112,7 +116,36 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                     const categories: string[] = vevent.getAllProperties('categories').map((category: { getFirstValue: () => any; }) => category.getFirstValue());
 
                     if (Appointment.isFromClickTT(categories)) {
-                        const appointmentFromCalendar = new DAVAppointmentDecorator(AppointmentFactory.createFromCalendar(summary, startDateTime, vevent.getFirstPropertyValue('description'), vevent.getFirstPropertyValue('location'), categories), calendarAppointment);
+                        // read the team lead from the organizer property if available. use the repository to find the team lead by name
+                        let teamLead: TeamLead | undefined = undefined;
+                        const organizer = vevent.getFirstPropertyValue('organizer');
+                        if (organizer) {
+                            // add email to model. this is the mail address prefixed with "mailto:" in the organizer property. we can use this to uniquely identify the team lead, as the name might not be unique
+                            const organizerName = organizer.replace(/.*CN=([^;]+).*/, '$1'); // Extract the common name (CN) from the organizer string
+                            this.logger.debug(`Found organizer in calendar event: ${organizerName}`);
+
+                            try {
+                                // Determine runde from the appointment date
+                                const runde = Appointment.getRunde(startDateTime);
+                                teamLead = await this.teamLeadRepository.findByName(organizerName, runde);
+                                if (teamLead) {
+                                    this.logger.debug(`Matched organizer to team lead: ${teamLead.fullName}`);
+                                } else {
+                                    this.logger.debug(`No team lead found matching organizer name: ${organizerName}`);
+                                    // Create a default team lead with the organizer name
+                                    teamLead = new TeamLead(organizerName, "", "", "", "");
+                                }
+                            } catch (error) {
+                                this.logger.error(`Error looking up team lead for organizer "${organizerName}": ${error}`);
+                                // Create a default team lead on error
+                                teamLead = new TeamLead(organizer, "", "", "", "");
+                            }
+                        } else {
+                            // Create a default team lead when no organizer is present
+                            teamLead = new TeamLead("Unknown", "", "", "", "");
+                        }
+
+                        const appointmentFromCalendar = new DAVAppointmentDecorator(AppointmentFactory.createFromCalendar(summary, startDateTime, vevent.getFirstPropertyValue('description'), vevent.getFirstPropertyValue('location'), categories, teamLead), calendarAppointment);
 
                         result.add(appointmentFromCalendar);
                     } else {
@@ -124,7 +157,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
                 throw error;
             }
-        });
+        }
 
         this.logger.info("Found " + result.size + " calendar entries.");
 
@@ -139,8 +172,9 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             await this.client.login();
             this.calendar = await this.findCalendar(this.url);
         }
-        const createPromise = new Promise((resolve, reject) => {
-            ics.createEvent(this.appointmentToIcsEvent(appointment), (error: Error, value: string) => {
+        const createPromise = new Promise(async (resolve, reject) => {
+            const icsEvent = await this.appointmentToIcsEvent(appointment);
+            ics.createEvent(icsEvent, (error: Error, value: string) => {
                 if (error) {
                     this.logger.error(error);
                     reject(error);
@@ -178,6 +212,9 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             });
 
             vevent.updatePropertyWithValue('title', newData.title);
+            vevent.updatePropertyWithValue('description', newData.description);
+            vevent.updatePropertyWithValue('organizer', {name: newData.teamLead.fullName, email: newData.teamLead.email});
+
             vevent.updatePropertyWithValue('dtstart', iso8601Formatter.format(newData.startDateTime));
 
             existingAppointment.calendarObject.data = vcalendar.toString();
@@ -197,22 +234,27 @@ export class CalDavCalendarServiceImpl implements CalendarService {
         }
     }
 
-    private appointmentToIcsEvent(appointment: Appointment) {
-        return {
+    private async appointmentToIcsEvent(appointment: Appointment) {
+        const icsEvent: any = {
             start: [appointment.startDateTime.year(), appointment.startDateTime.monthValue(), appointment.startDateTime.dayOfMonth(), appointment.startDateTime.hour(), appointment.startDateTime.minute()],
             duration: { hours: 2, minutes: 30 },
             title: appointment.title,
-            description: appointment.id,
+            description: appointment.description,
             location: appointment.location,
             categories: appointment.categories,
             status: 'CONFIRMED',
             busyStatus: 'BUSY',
-            //            organizer: { name: 'xxx', email: 'yyy' },
-            //            attendees: [
-            //                { name: 'Adam Gibbons', email: 'adam@example.com', rsvp: true, partstat: 'ACCEPTED', role: 'REQ-PARTICIPANT' },
-            //                { name: 'Brittany Seaton', email: 'brittany@example2.org', dir: 'https://linkedin.com/in/brittanyseaton', role: 'OPT-PARTICIPANT' }
-            //            ]
+        };
+
+        // Use the team lead from the appointment if available
+        if (appointment.teamLead) {
+            icsEvent.organizer = { name: appointment.teamLead.fullName, email: appointment.teamLead.email };
+            this.logger.debug(`Using team lead as organizer: ${icsEvent.organizer}`);
+        } else {
+            this.logger.debug(`No team lead available for appointment: ${appointment.title}`);
         }
+
+        return icsEvent;
     }
 }
 
@@ -226,9 +268,11 @@ class DAVAppointmentDecorator implements AppointmentInterface {
     get subLeague(): string {
         return this.decoratedAppointment.subLeague;
     }
+
     get matchNumber(): number {
         return this.decoratedAppointment.matchNumber;
     }
+
     get round(): string {
         return this.decoratedAppointment.round;
     }
@@ -263,6 +307,10 @@ class DAVAppointmentDecorator implements AppointmentInterface {
 
     get location(): string {
         return this.decoratedAppointment.location;
+    }
+
+    get teamLead() {
+        return this.decoratedAppointment.teamLead;
     }
 
     isSameAs(compareTo: Appointment): boolean {
