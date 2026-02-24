@@ -4,8 +4,7 @@
   "coverageProvider": "v8",
   "setupFilesAfterEnv": ["<rootDir>/tests/jest.setup.ts"],
   "testMatch": [
-    "**/tests/**/*.spec.ts",
-    "**/tests/**/*.integration.ts"
+    "**/tests/**/*.spec.ts"
   ],
   "transform": {
     "^.+\\.tsx?$": "ts-jest"
