@@ -1,74 +1,53 @@
 import { injectable, inject } from "inversify";
 import { SportsHall } from "../../domain/model/SportsHall";
-import { SportsHallRepository } from "../../domain/service/SportsHallRepository";
+import { SportsHallRepository, SportsHallKey } from "../../domain/service/SportsHallRepository";
+import { Club } from "../../domain/model/Club";
 import { SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { FileStorageService } from "../../domain/service/FileStorageService";
 import { SportsHallRemoteService } from "../../domain/service/SportsHallRemoteService";
-import {Club} from "../../domain/model/Club";
+import { LoggerImpl } from "../LoggerImpl";
+import { FileCachedRepository } from "./CachedRepository";
 
 /**
  * File-based implementation of SportsHallRepository.
  * Stores sports halls in a local JSON file.
  */
 @injectable()
-export class FileSportsHallRepositoryImpl implements SportsHallRepository {
-    private readonly fileName = "sports_halls.json";
+export class FileSportsHallRepositoryImpl extends FileCachedRepository<SportsHall> implements SportsHallRepository {
+    private static isSamePrimaryKeyImpl(a: SportsHallKey, b: SportsHallKey): boolean {
+        return a.club === b.club && a.sportshallNumber === b.sportshallNumber;
+    }
 
     constructor(
-        @inject(SERVICE_IDENTIFIER.FileStorageService) private readonly fileStorageService: FileStorageService,
-        @inject(SERVICE_IDENTIFIER.SportsHallRemoteService) private readonly sportsHallRemoteService: SportsHallRemoteService
-    ) {}
+        @inject(SERVICE_IDENTIFIER.FileStorageService) fileStorageService: FileStorageService,
+        @inject(SERVICE_IDENTIFIER.SportsHallRemoteService) private readonly sportsHallRemoteService: SportsHallRemoteService,
+        @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl
+    ) {
+        super("sports_halls.json", fileStorageService, logger);
+    }
 
-    async findByClubAndSportshall(club: Club, sportshallNumber: number): Promise<SportsHall | undefined> {
+    protected isSamePrimaryKey(a: SportsHall, b: SportsHall): boolean {
+        return FileSportsHallRepositoryImpl.isSamePrimaryKeyImpl(a, b);
+    }
+
+    async find(key: SportsHallKey, club: Club): Promise<SportsHall | undefined> {
         const sportsHalls = await this.getAll();
-
-        let hall = sportsHalls.find(hall => hall.club === club.name && hall.sportshallNumber === sportshallNumber);
+        let hall = sportsHalls.find(hall => FileSportsHallRepositoryImpl.isSamePrimaryKeyImpl(hall, key));
         if (hall) {
             return hall;
         }
-
         try {
+            // Use the provided Club object for remote fetch
             const fetched = await this.sportsHallRemoteService.fetchSportsHalls(club);
             for (const h of fetched) {
                 await this.save(h);
             }
-
-            // Reload from storage to ensure up-to-date
-            const updatedHalls = await this.getAll();
-            return updatedHalls.find(hall => hall.club === club.name && hall.sportshallNumber === sportshallNumber);
+            // Use the cached entities instead of reloading from file
+            const cached = this.cachedEntities ?? [];
+            return cached.find(hall => FileSportsHallRepositoryImpl.isSamePrimaryKeyImpl(hall, key));
         } catch (err) {
-            // Log and return undefined
-            console.error(`Failed to fetch sports halls for team ${club.name}:`, err);
+            this.logger.error(`Failed to fetch sports halls for team ${key.club}: ${err}`);
             return undefined;
         }
-    }
-
-    async save(sportsHall: SportsHall): Promise<void> {
-        const sportsHalls = await this.getAll();
-        const idx = sportsHalls.findIndex(hall => hall.club === sportsHall.club && hall.sportshallNumber === sportsHall.sportshallNumber);
-        if (idx >= 0) {
-            sportsHalls[idx] = sportsHall;
-        } else {
-            sportsHalls.push(sportsHall);
-        }
-        await this.saveAll(sportsHalls);
-    }
-
-    async getAll(): Promise<SportsHall[]> {
-        try {
-            const content = await this.fileStorageService.readFile(this.fileName);
-            // FileStorageService.readFile returns a string
-            return JSON.parse(content);
-        } catch (err: any) {
-            if (err && (err.code === 'ENOENT' || err.message?.includes('not found'))) {
-                return [];
-            }
-            console.error('Error reading sports halls file:', err);
-            throw err;
-        }
-    }
-
-    private async saveAll(sportsHalls: SportsHall[]): Promise<void> {
-        await this.fileStorageService.writeFile(this.fileName, JSON.stringify(sportsHalls, null, 2));
     }
 }
