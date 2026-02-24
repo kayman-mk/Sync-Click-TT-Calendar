@@ -6,7 +6,7 @@ describe('CommandLineInterface', () => {
     beforeEach(() => {
         process.env.CALENDAR_USERNAME = "user";
         process.env.CALENDAR_PASSWORD = "password";
-        process.env.CLUBNAME = "SC Test";
+        process.env.CLUBNAME = "SC Kleckersdorf";
     });
 
     it('should_accept_appointment_file_parameter_when_provided', async () => {

@@ -8,6 +8,7 @@ export const SERVICE_IDENTIFIER = {
     Logger: Symbol.for("Logger"),
     SportsHallRepository: Symbol.for("SportsHallRepository"),
     SportsHallRemoteService: Symbol.for("SportsHallRemoteService"),
+    TeamLeadRepository: Symbol.for("TeamLeadRepository"),
     WebPageService: Symbol.for("WebPageService")
 };
 

@@ -123,7 +123,7 @@ export class SyncCalendarApplicationService {
 
             let altersklasse = '';
             if (row.staffel.endsWith("E")) {
-                altersklasse = ""; // Erwachsene
+                altersklasse = ""; // Herren
             } else if (row.staffel.includes("mJ") || row.staffel.includes("wJ")) {
                 if (row.staffel.includes("mJ")) {
                     altersklasse = row.staffel.substring(row.staffel.indexOf("mJ"));
@@ -132,6 +132,8 @@ export class SyncCalendarApplicationService {
                 }
             } else if (row.staffel.includes("J")) {
                 altersklasse = row.staffel.substring(row.staffel.indexOf("J"));
+            } else if (row.staffel.endsWith("D")) {
+                altersklasse = "D"; // Damen
             }
 
             const csvRow = `${row.termin};${row.staffel};${runde};${row.heimMannschaft};${halleStrasse};${halleOrt};${hallePLZ};${halleNameFinal};${row.gastMannschaft};${row.gastMannschaft};${begegnungNr};${altersklasse}`;
@@ -171,7 +173,7 @@ export class SyncCalendarApplicationService {
         const calendarAppointments = await this.calendarService.downloadAppointments(appointmentsOrderedByTime[0].startDateTime.atZone(ZoneId.of("Europe/Berlin")), appointmentsOrderedByTime[appointmentsOrderedByTime.length - 1].startDateTime.atZone(ZoneId.of("Europe/Berlin")));
 
         // check, what to do
-        const processedIds: Set<String> = new Set();
+        const processedIds: Set<string> = new Set();
         const createAppointments: Appointment[] = [];
         const updateAppointments: Map<AppointmentInterface, AppointmentInterface> = new Map();
 
