@@ -110,7 +110,7 @@ export class SyncCalendarApplicationService {
             if (row.heimMannschaft && row.halleName && club) {
                 const hallNumMatch = row.halleName.match(/Spiellokal\s*(\d+)/);
                 const sportshallNumber = hallNumMatch ? Number.parseInt(hallNumMatch[1], 10) : 1;
-                const sportsHall = await this.sportsHallRepository.findByClubAndSportshall(club, sportshallNumber);
+                const sportsHall = await this.sportsHallRepository.find({ club: club.name, sportshallNumber }, club);
                 if (sportsHall) {
                     halleStrasse = `${sportsHall.street} ${sportsHall.houseNumber}`.trim();
                     halleOrt = sportsHall.city;
