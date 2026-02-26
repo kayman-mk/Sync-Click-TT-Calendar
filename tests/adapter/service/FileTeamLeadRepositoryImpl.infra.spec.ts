@@ -12,7 +12,6 @@ describe('FileTeamLeadRepositoryImpl', () => {
 
     const testDataDir = path.join(__dirname, '../../../target/test-data');
     const testFilePath = path.join(testDataDir, 'team_leads.json');
-    const originalCwd = process.cwd();
 
     const sampleData = {
         VR: [
@@ -57,19 +56,13 @@ describe('FileTeamLeadRepositoryImpl', () => {
                 transports: [new winston.transports.Console({ silent: true })],
             })
         );
-
-        // Change to test directory so LocalFileStorageServiceImpl uses relative paths to find the test file
-        process.chdir(testDataDir);
     });
 
     beforeEach(() => {
-        repo = new FileTeamLeadRepositoryImpl(storageService, infraLogger);
+        repo = new FileTeamLeadRepositoryImpl(testFilePath, storageService, infraLogger);
     });
 
     afterAll(() => {
-        // Restore original directory
-        process.chdir(originalCwd);
-
         // Clean up test files
         if (fs.existsSync(testFilePath)) {
             fs.unlinkSync(testFilePath);

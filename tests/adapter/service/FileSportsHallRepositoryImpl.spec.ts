@@ -38,6 +38,7 @@ describe('FileSportsHallRepositoryImpl', () => {
         jest.clearAllMocks();
 
         repo = new FileSportsHallRepositoryImpl(
+            '/test/path/sports_halls.json',
             mockFileStorageService,
             mockRemoteService,
             mockLogger

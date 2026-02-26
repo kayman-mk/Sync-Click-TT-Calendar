@@ -16,7 +16,6 @@ describe('FileSportsHallRepositoryImpl', () => {
 
     const testDataDir = path.join(__dirname, '../../../target/test-data');
     const testFilePath = path.join(testDataDir, 'sports_halls.json');
-    const originalCwd = process.cwd();
 
     const sampleData: SportsHall[] = [
         {
@@ -71,19 +70,13 @@ describe('FileSportsHallRepositoryImpl', () => {
                 transports: [new winston.transports.Console({ silent: true })],
             })
         );
-
-        // Change to test directory so LocalFileStorageServiceImpl uses relative paths to find the test file
-        process.chdir(testDataDir);
     });
 
     beforeEach(() => {
-        repo = new FileSportsHallRepositoryImpl(storageService, remoteService, infraLogger);
+        repo = new FileSportsHallRepositoryImpl(testFilePath, storageService, remoteService, infraLogger);
     });
 
     afterAll(() => {
-        // Restore original directory
-        process.chdir(originalCwd);
-
         // Clean up test files
         if (fs.existsSync(testFilePath)) {
             fs.unlinkSync(testFilePath);
