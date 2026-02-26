@@ -1,6 +1,7 @@
-import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/service/FileTeamLeadRepositoryImpl';
+import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/repository/FileTeamLeadRepositoryImpl';
 import { LocalFileStorageServiceImpl } from '../../../src/adapter/service/LocalFileStorageServiceImpl';
 import { Logger } from '../../../src/domain/service/Logger';
+import { TeamLead } from '../../../src/domain/model/TeamLead';
 import { MockLogger } from '../../test-utils/MockLogger';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -99,7 +100,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
         expect(result).toHaveLength(2);
         expect(result[0].fullName).toBe('John Smith');
         expect(result[1].fullName).toBe('Maria Mueller');
-        expect(result.every(lead => lead.runde === 'VR')).toBe(true);
+        expect(result.every((lead: TeamLead) => lead.runde === 'VR')).toBe(true);
     });
 
     it('should_find_same_person_in_different_runde', async () => {

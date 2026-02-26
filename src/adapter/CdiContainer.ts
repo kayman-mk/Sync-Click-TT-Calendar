@@ -12,13 +12,13 @@ import { LocalFileStorageServiceImpl } from "./service/LocalFileStorageServiceIm
 import { CalendarService } from "../domain/service/CalendarService";
 import { CalDavCalendarServiceImpl } from "./service/CalDavCalendarServiceImpl";
 import { SportsHallRepository } from "../domain/service/SportsHallRepository";
-import { FileSportsHallRepositoryImpl } from "./service/FileSportsHallRepositoryImpl";
+import { FileSportsHallRepositoryImpl } from "./repository/FileSportsHallRepositoryImpl";
 import { SportsHallRemoteService } from "../domain/service/SportsHallRemoteService";
 import { HttpSportsHallRemoteService } from "./service/HttpSportsHallRemoteService";
 import { WebPageService } from "../domain/service/WebPageService";
 import { AxiosWebPageService } from "./service/AxiosWebPageService";
 import { TeamLeadRepository } from "../domain/service/TeamLeadRepository";
-import { FileTeamLeadRepositoryImpl } from "./service/FileTeamLeadRepositoryImpl";
+import { FileTeamLeadRepositoryImpl } from "./repository/FileTeamLeadRepositoryImpl";
 import winston from "winston";
 
 export class CdiContainer {

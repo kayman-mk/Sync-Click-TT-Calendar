@@ -1,4 +1,4 @@
-import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/service/FileTeamLeadRepositoryImpl';
+import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/repository/FileTeamLeadRepositoryImpl';
 import { FileStorageService } from '../../../src/domain/service/FileStorageService';
 import { TeamLead } from '../../../src/domain/model/TeamLead';
 import { MockLogger } from '../../test-utils/MockLogger';

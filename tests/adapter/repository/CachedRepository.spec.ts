@@ -1,4 +1,4 @@
-import { FileCachedRepository } from '../../../src/adapter/service/CachedRepository';
+import { FileCachedRepository } from '../../../src/adapter/repository/CachedRepository';
 import { MockLogger } from '../../test-utils/MockLogger';
 
 // Simple entity for testing
