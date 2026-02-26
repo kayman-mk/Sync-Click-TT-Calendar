@@ -1,4 +1,5 @@
 import { FileCachedRepository } from '../../../src/adapter/service/CachedRepository';
+import { MockLogger } from '../../test-utils/MockLogger';
 
 // Simple entity for testing
 interface TestEntity {
@@ -6,11 +7,6 @@ interface TestEntity {
     value: string;
 }
 
-// Mock logger
-class MockLogger {
-    public errors: any[] = [];
-    error(message: any) { this.errors.push(message); }
-}
 
 // Mock file storage
 class MockFileStorage {
@@ -48,7 +44,6 @@ describe('FileCachedRepository', () => {
     beforeEach(() => {
         storage = new MockFileStorage();
         logger = new MockLogger();
-        // @ts-ignore: LoggerImpl type
         repo = new TestFileCachedRepository(filePath, storage, logger);
     });
 

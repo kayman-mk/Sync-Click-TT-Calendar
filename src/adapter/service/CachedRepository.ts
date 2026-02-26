@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { LoggerImpl } from "../LoggerImpl";
+import { Logger } from "../../domain/service/Logger";
 
 /**
  * Abstract concurrency-safe, cached repository for any entity type.
@@ -17,7 +17,7 @@ export abstract class FileCachedRepository<T> {
     constructor(
         protected readonly filePath: string,
         protected readonly fileStorageService: { readFile: (file: string) => Promise<string>; writeFile: (file: string, content: string) => Promise<void> },
-        protected readonly logger: LoggerImpl
+        protected readonly logger: Logger
     ) {}
 
     /**

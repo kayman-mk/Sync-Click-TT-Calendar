@@ -1,7 +1,7 @@
 import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/service/FileTeamLeadRepositoryImpl';
 import { FileStorageService } from '../../../src/domain/service/FileStorageService';
 import { TeamLead } from '../../../src/domain/model/TeamLead';
-import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
+import { MockLogger } from '../../test-utils/MockLogger';
 
 // Mocks
 const mockFileStorageService: FileStorageService = {
@@ -9,12 +9,7 @@ const mockFileStorageService: FileStorageService = {
     writeFile: jest.fn(),
     deleteFile: jest.fn(),
 };
-const mockLogger: LoggerImpl = {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-} as unknown as LoggerImpl;
+const mockLogger = new MockLogger();
 
 describe('FileTeamLeadRepositoryImpl', () => {
     let repo: FileTeamLeadRepositoryImpl;

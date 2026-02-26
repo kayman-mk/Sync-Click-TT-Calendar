@@ -5,7 +5,7 @@ import { Club } from "../../domain/model/Club";
 import { SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { FileStorageService } from "../../domain/service/FileStorageService";
 import { SportsHallRemoteService } from "../../domain/service/SportsHallRemoteService";
-import { LoggerImpl } from "../LoggerImpl";
+import { Logger } from "../../domain/service/Logger";
 import { FileCachedRepository } from "./CachedRepository";
 
 /**
@@ -22,7 +22,7 @@ export class FileSportsHallRepositoryImpl extends FileCachedRepository<SportsHal
         filePath: string,
         @inject(SERVICE_IDENTIFIER.FileStorageService) fileStorageService: FileStorageService,
         @inject(SERVICE_IDENTIFIER.SportsHallRemoteService) private readonly sportsHallRemoteService: SportsHallRemoteService,
-        @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl
+        @inject(SERVICE_IDENTIFIER.Logger) logger: Logger
     ) {
         super(filePath, fileStorageService, logger);
     }

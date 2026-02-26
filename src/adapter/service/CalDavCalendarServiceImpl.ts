@@ -10,7 +10,7 @@ import { Appointment, AppointmentFactory, AppointmentInterface } from "../../dom
 import { CalendarService } from "../../domain/service/CalendarService";
 import { TeamLeadRepository } from "../../domain/service/TeamLeadRepository";
 import { TeamLead } from "../../domain/model/TeamLead";
-import { LoggerImpl } from "../LoggerImpl";
+import { Logger } from "../../domain/service/Logger";
 
 /**
  * Reads all events from a certain calendar. Events must be linked to category 'Click-TT'
@@ -18,11 +18,11 @@ import { LoggerImpl } from "../LoggerImpl";
 @injectable()
 export class CalDavCalendarServiceImpl implements CalendarService {
     private readonly client: DAVClient;
-    private readonly logger: LoggerImpl;
+    private readonly logger: Logger;
     private readonly teamLeadRepository: TeamLeadRepository;
     private calendar: DAVCalendar | undefined;
 
-    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl, @inject(SERVICE_IDENTIFIER.TeamLeadRepository) teamLeadRepository: TeamLeadRepository) {
+    constructor(@inject(CONFIGURATION.CalendarUrl) readonly url: string, @inject(CONFIGURATION.CalendarUsername) readonly username: string, @inject(CONFIGURATION.CalendarPassword) readonly password: string, @inject(SERVICE_IDENTIFIER.Logger) logger: Logger, @inject(SERVICE_IDENTIFIER.TeamLeadRepository) teamLeadRepository: TeamLeadRepository) {
         this.client = new DAVClient({
             serverUrl: this.url,
             credentials: {

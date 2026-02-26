@@ -3,7 +3,7 @@ import { TeamLead } from "../../domain/model/TeamLead";
 import { TeamLeadRepository } from "../../domain/service/TeamLeadRepository";
 import { SERVICE_IDENTIFIER } from "../../dependency_injection";
 import { FileStorageService } from "../../domain/service/FileStorageService";
-import { LoggerImpl } from "../LoggerImpl";
+import { Logger } from "../../domain/service/Logger";
 import { FileCachedRepository } from "./CachedRepository";
 
 /**
@@ -15,7 +15,7 @@ export class FileTeamLeadRepositoryImpl extends FileCachedRepository<TeamLead> i
     constructor(
         filePath: string,
         @inject(SERVICE_IDENTIFIER.FileStorageService) fileStorageService: FileStorageService,
-        @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl
+        @inject(SERVICE_IDENTIFIER.Logger) logger: Logger
     ) {
         super(filePath, fileStorageService, logger);
     }
