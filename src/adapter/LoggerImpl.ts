@@ -7,10 +7,10 @@ import { Logger } from '../domain/service/Logger';
 export class LoggerImpl implements Logger {
     private readonly logger: winston.Logger;
 
-    constructor(transport: winston.transport) {
+    constructor(transport: winston.transport, logLevel: string = 'info') {
         this.logger = winston.createLogger({
             format: format.combine(format.errors({ stack: true }), format.timestamp(), format.cli()),
-            level: 'info',
+            level: logLevel,
             transports: [
                 transport
             ],
