@@ -4,22 +4,21 @@ import { LocalDateTime, DateTimeFormatter } from "@js-joda/core";
 
 // Import ical.js module for parsing iCalendar data
 import ICAL from 'ical.js';
+import {randomUUID} from "node:crypto";
 
 /**
  * Interface for appointment creation parameters
  */
-export interface CreateAppointmentParams {
+export interface AppointmentParams {
     title: string;
     startDateTime: LocalDateTime;
     location: string;
-    isCup: boolean;
-    ageClass: string;
     categories: string[];
-    subLeague: string;
-    matchNumber: number;
-    round: string;
-    id?: string;
+    id: string;
     teamLeadName: string;
+    organizerName: string;
+    description: string;
+    calendarUuid?: string;
 }
 
 /**
@@ -64,8 +63,6 @@ export class CalDavTestServer {
      * Start the Radicale CalDAV server container with automatic random port allocation
      */
     async start(): Promise<void> {
-        console.log("Starting CalDAV server container with random port allocation...");
-
         try {
             // Create the container
             this.container = new GenericContainer("tomsquest/docker-radicale:latest")
@@ -86,12 +83,9 @@ export class CalDavTestServer {
 
             // Construct the calendar URL with the dynamically assigned port
             this.calendarUrl = `http://${host}:${mappedPort}/admin/calendar.ics/`;
-            console.log(`CalDAV server started at ${this.calendarUrl}`);
 
             // Initialize the calendar
-            console.log("Initializing calendar...");
             await this.initializeCalendar();
-            console.log("Calendar initialized!");
 
             // Create and login the global DAV client
             this.davClient = new DAVClient({
@@ -104,14 +98,12 @@ export class CalDavTestServer {
                 defaultAccountType: 'caldav'
             });
             await this.davClient.login();
-            console.log("DAV client initialized and logged in");
         } catch (error) {
-            console.error("Failed to start CalDAV server:", error);
             if (this.containerRuntime) {
                 try {
                     await this.containerRuntime.stop();
                 } catch (stopError) {
-                    console.error("Failed to stop container:", stopError);
+                    // Container stop failed
                 }
             }
             throw new Error("Could not start CalDAV server. Make sure Docker is installed and running.");
@@ -122,25 +114,20 @@ export class CalDavTestServer {
      * Stop the Radicale CalDAV server container and clean up
      */
     async stop(): Promise<void> {
-        console.log("Starting test cleanup...");
-
         try {
             // Tear down the calendar (remove all test data)
-            console.log("Tearing down test calendar data...");
             await this.teardown();
         } catch (teardownError) {
-            console.warn("Calendar teardown encountered issues:", teardownError);
+            console.error("Failed to tear down calendar:", teardownError);
         }
 
         // Stop the container
-        console.log("Stopping CalDAV server container...");
         try {
             if (this.containerRuntime) {
                 await this.containerRuntime.stop();
-                console.log("CalDAV server stopped and cleaned up.");
             }
         } catch (error) {
-            console.error("Failed to stop CalDAV server:", error);
+            console.error("Failed to stop CalDAV server container:", error);
         }
     }
 
@@ -150,8 +137,6 @@ export class CalDavTestServer {
      */
     private async initializeCalendar(): Promise<void> {
         try {
-            console.log("Creating calendar collection...");
-
             // Create an HTTP request to MKCALENDAR
             const authHeader = this.buildAuthHeader();
 
@@ -179,19 +164,16 @@ export class CalDavTestServer {
                 body: xmlBody
             });
 
-            console.log(`MKCALENDAR response: ${response.status} ${response.statusText}`);
-
             // 201 = Created, 403/405 = Already exists or method not allowed (which is ok)
             if (!response.ok && response.status !== 403 && response.status !== 405) {
-                console.warn(`MKCALENDAR returned ${response.status}`);
+                // MKCALENDAR returned unexpected status
             }
 
             // Give the server a moment
             await this.sleep(500);
-            console.log("Calendar creation attempt completed");
         } catch (error) {
-            console.warn("Failed to initialize calendar:", error);
-            // Don't fail - calendar will be created on first write
+            // Failed to initialize calendar, will be created on first write
+            console.error("Failed to initialize calendar, it may be created on first write:", error);
         }
     }
 
@@ -218,29 +200,21 @@ export class CalDavTestServer {
      */
     private async teardown(): Promise<void> {
         try {
-            console.log("Tearing down test calendar...");
-
             // Use the global DAV client
             if (!this.davClient) {
-                console.warn("DAV client not available");
                 return;
             }
 
             // Fetch all calendars
             const calendars = await this.davClient.fetchCalendars();
-            console.log(`Found ${calendars.length} calendar(s) for cleanup`);
 
             // For each calendar, fetch and delete all objects
             for (const calendar of calendars) {
                 try {
-                    console.log(`Cleaning calendar: ${calendar.displayName} (${calendar.url})`);
-
                     // Fetch all calendar objects (events)
                     const calendarObjects = await this.davClient.fetchCalendarObjects({
                         calendar: calendar
                     });
-
-                    console.log(`Found ${calendarObjects.length} event(s) to delete`);
 
                     // Delete each calendar object
                     for (const obj of calendarObjects) {
@@ -248,20 +222,16 @@ export class CalDavTestServer {
                             await this.davClient.deleteCalendarObject({
                                 calendarObject: obj
                             });
-                            console.log(`Deleted event: ${obj.url}`);
                         } catch (deleteError) {
-                            console.warn(`Failed to delete calendar object ${obj.url}:`, deleteError);
+                            console.error(`Failed to delete calendar object ${obj.url}:`, deleteError);
                         }
                     }
                 } catch (calendarError) {
-                    console.warn(`Failed to clean calendar ${calendar.displayName}:`, calendarError);
+                    console.error(`Failed to clean calendar ${calendar.url}:`, calendarError);
                 }
             }
-
-            console.log("Calendar teardown completed");
         } catch (error) {
-            console.warn("Failed to tear down calendar:", error);
-            // Don't fail - container will be stopped anyway
+            console.error("Failed to tear down calendar:", error);
         }
     }
 
@@ -269,17 +239,13 @@ export class CalDavTestServer {
      * Create an appointment in the calendar
      * @param params The appointment parameters
      */
-    async createAppointment(params: CreateAppointmentParams): Promise<void> {
+    async createAppointment(params: AppointmentParams): Promise<AppointmentParams> {
         if (!this.davClient) {
             throw new Error("DAV client not available - call start() first");
         }
 
-        // Generate appointment ID: use provided ID if available, otherwise derive one
-        // from sub-league, match number, round, and the year of the start date/time.
-        const appointmentId = params.id || `${params.subLeague}-${params.matchNumber}-${params.round}-${params.startDateTime.year()}`;
-
-        // Build categories string
-        const categoriesStr = params.categories.map(cat => `CATEGORIES:${cat}`).join('\n');
+        // Build categories string with comma-separated values
+        const categoriesStr = `CATEGORIES:${params.categories.join(',')}`;
 
         // Format datetime for iCalendar
         const dateTimeStr = params.startDateTime.format(
@@ -292,30 +258,34 @@ export class CalDavTestServer {
             DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")
         );
 
+        // Escape special characters in description for iCalendar format
+        // According to RFC 5545, DESCRIPTION values need to escape: \, ;, , (comma), and newlines
+        const escapedDescription = params.description
+            .replace(/\\/g, '\\\\')  // Escape backslash first
+            .replace(/\n/g, '\\n')   // Escape newlines
+            .replace(/;/g, '\\;')    // Escape semicolons
+            .replace(/,/g, '\\,');   // Escape commas
+
         // Create iCalendar event
+        const internalId = randomUUID();
         const icalContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test Appointment//EN
 CALSCALE:GREGORIAN
 BEGIN:VEVENT
-UID:${appointmentId}@test
+UID:${internalId}@test
 DTSTART:${dateTimeStr}
 DTEND:${endDateTimeStr}
 SUMMARY:${params.title}
 LOCATION:${params.location}
-DESCRIPTION:Mannschaftsführer: ${params.teamLeadName}\n\nKategorien: ${params.categories.join(', ')}\n\nID: ${appointmentId}
+DESCRIPTION:${escapedDescription}
 ${categoriesStr}
 STATUS:CONFIRMED
+ORGANIZER;CN=${params.organizerName}:mailto:${params.organizerName.replace(/\s+/g, '.').toLowerCase()}@localhost.local
 END:VEVENT
 END:VCALENDAR`;
 
-        // Get the calendar to write to
-        const calendars = await this.davClient.fetchCalendars();
-        if (calendars.length === 0) {
-            throw new Error("No calendar found for creating appointment");
-        }
-
-        const eventUrl = `${this.calendarUrl}${appointmentId}.ics`;
+        const eventUrl = `${this.calendarUrl}${internalId}.ics`;
 
         // Build the Basic Authentication header using the CalDAV test server credentials.
         const authHeader = this.buildAuthHeader();
@@ -333,7 +303,10 @@ END:VCALENDAR`;
             throw new Error(`Failed to create appointment: ${response.status} ${response.statusText}`);
         }
 
-        console.log(`Created appointment: ${params.title} (${appointmentId})`);
+        return {
+            ...params,
+            calendarUuid: internalId
+        };
     }
 
     /**
@@ -346,15 +319,7 @@ END:VCALENDAR`;
         titleFilter?: string;
         startDateTimeFrom?: LocalDateTime;
         startDateTimeTo?: LocalDateTime;
-    }): Promise<Array<{
-        id: string;
-        title: string;
-        startDateTime: LocalDateTime;
-        location: string;
-        categories: string[];
-        description: string;
-        teamLeadName: string;
-    }>> {
+    }): Promise<Array<AppointmentParams>> {
         if (!this.davClient) {
             throw new Error("DAV client not available - call start() first");
         }
@@ -362,7 +327,6 @@ END:VCALENDAR`;
         // Fetch calendars
         const calendars = await this.davClient.fetchCalendars();
         if (calendars.length === 0) {
-            console.log("No calendars found");
             return [];
         }
 
@@ -371,15 +335,7 @@ END:VCALENDAR`;
             calendar: calendar
         });
 
-        const appointments: Array<{
-            id: string;
-            title: string;
-            startDateTime: LocalDateTime;
-            location: string;
-            categories: string[];
-            description: string;
-            teamLeadName: string;
-        }> = [];
+        const appointments: Array<AppointmentParams> = [];
 
         // Parse iCalendar objects
         for (const obj of calendarObjects) {
@@ -393,10 +349,18 @@ END:VCALENDAR`;
                 const title = String(vevent.getFirstPropertyValue('summary') || '');
                 const location = String(vevent.getFirstPropertyValue('location') || '');
                 const description = String(vevent.getFirstPropertyValue('description') || '');
-                const uid = String(vevent.getFirstPropertyValue('uid') || '');
 
-                // Extract ID from UID (remove @test suffix if present)
-                const id = uid.replace('@test', '');
+                // Unescape special characters that were escaped in iCalendar format
+                // According to RFC 5545, we need to unescape: \, ;, , (comma), and newlines
+                const unescapedDescription = description
+                    .replace('\\n', '\n')    // Unescape newlines
+                    .replace(/\\;/g, ';')     // Unescape semicolons
+                    .replace(/\\,/g, ',')     // Unescape commas
+                    .replace(/\\\\/g, '\\');  // Unescape backslash last
+
+                // Extract ID from description (if present), starting with "ID: "
+                const idMatch = new RegExp(/ID:\s*(.+?)(?:\n|$)/).exec(unescapedDescription);
+                const idFromDescription = idMatch ? idMatch[1].trim() : '';
 
                 // Parse datetime
                 const dtstart = vevent.getFirstPropertyValue('dtstart');
@@ -405,7 +369,7 @@ END:VCALENDAR`;
                 if (dtstart) {
                     if (typeof dtstart === 'string') {
                         // Parse ISO string format
-                        const match = dtstart.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+                        const match = new RegExp(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/).exec(dtstart);
                         if (match) {
                             startDateTime = LocalDateTime.of(
                                 Number.parseInt(match[1]),
@@ -433,17 +397,46 @@ END:VCALENDAR`;
                 const categoriesProperty = vevent.getAllProperties('categories');
                 const categories: string[] = [];
                 for (const catProp of categoriesProperty) {
-                    const catValue = catProp.getFirstValue();
-                    if (typeof catValue === 'string') {
-                        categories.push(catValue);
+                    // Try to get all values from the property, not just the first one
+                    try {
+                        // ical.js may have multiple values as an array-like structure
+                        const allValues = catProp.getValues && catProp.getValues();
+                        if (Array.isArray(allValues) && allValues.length > 0) {
+                            // If getValues() returns an array, use it
+                            categories.push(...allValues.map(v => String(v).trim()).filter(v => v.length > 0));
+                        } else {
+                            // Fall back to getFirstValue() and split by comma
+                            const catValue = catProp.getFirstValue();
+                            if (typeof catValue === 'string') {
+                                // Split by comma and add each category
+                                const catArray = catValue.split(',').map(c => c.trim()).filter(c => c.length > 0);
+                                categories.push(...catArray);
+                            }
+                        }
+                    } catch (e) {
+                        // If parsing fails, try the simple approach
+                        const catValue = catProp.getFirstValue();
+                        if (typeof catValue === 'string') {
+                            const catArray = catValue.split(',').map(c => c.trim()).filter(c => c.length > 0);
+                            categories.push(...catArray);
+                        }
                     }
                 }
 
                 // Extract team lead name from description
                 let teamLeadName = '';
-                const teamLeadMatch = description.match(/Mannschaftsführer:\s*(.+?)(?:\n|$)/);
+                const teamLeadMatch = unescapedDescription.match(/Mannschaftsführer:\s*(.+?)(?:\n|$)/);
                 if (teamLeadMatch) {
                     teamLeadName = teamLeadMatch[1].trim();
+                }
+
+                let organizerName = '';
+                const organizerProp = vevent.getFirstProperty('organizer');
+                if (organizerProp) {
+                    const cnParam = organizerProp.getParameter('cn');
+                    if (cnParam) {
+                        organizerName = cnParam as string;
+                    }
                 }
 
                 // Apply filters if provided
@@ -463,21 +456,21 @@ END:VCALENDAR`;
                 }
 
                 appointments.push({
-                    id,
                     title,
                     startDateTime,
                     location,
                     categories,
-                    description,
-                    teamLeadName
+                    id: idFromDescription,
+                    teamLeadName,
+                    organizerName,
+                    description: unescapedDescription,
+                    calendarUuid: obj.url.split('/').pop()?.replace('.ics', '') || ''
                 });
-
             } catch (parseError) {
-                console.warn(`Failed to parse calendar object ${obj.url}:`, parseError);
+                console.error("Failed to parse calendar object:", parseError);
             }
         }
 
-        console.log(`Retrieved ${appointments.length} appointment(s) from calendar`);
         return appointments;
     }
 }

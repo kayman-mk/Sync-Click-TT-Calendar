@@ -64,7 +64,6 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
     async downloadAppointments(minimumDateTime: ZonedDateTime, maximumDateTime: ZonedDateTime): Promise<Set<AppointmentInterface>> {
         await this.client.login();
-
         this.calendar = await this.findCalendar(this.url);
 
         const vEventDateTimeFormatters = [
@@ -161,7 +160,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
         this.logger.info("Found " + result.size + " calendar entries.");
 
-        return Promise.resolve(new Set<AppointmentInterface>(result));
+        return new Set<AppointmentInterface>(result);
     }
 
     async createAppointment(appointment: Appointment) {
@@ -196,8 +195,8 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
     async updateAppointment(existingAppointment: AppointmentInterface, newData: AppointmentInterface): Promise<void> {
         if (existingAppointment instanceof DAVAppointmentDecorator) {
-            var vcalendar = new ICAL.Component(ICAL.parse(existingAppointment.calendarObject.data));
-            var vevent = vcalendar.getFirstSubcomponent('vevent');
+            let vcalendar = new ICAL.Component(ICAL.parse(existingAppointment.calendarObject.data));
+            let vevent = vcalendar.getFirstSubcomponent('vevent');
 
             const iso8601Formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -205,7 +204,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
             vevent.removeAllProperties('categories');
             newData.categories.forEach(category => {
-                var prop = new ICAL.Property('categories');
+                let prop = new ICAL.Property('categories');
                 prop.setValue(category);
 
                 vevent.addProperty(prop);
@@ -219,6 +218,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
             existingAppointment.calendarObject.data = vcalendar.toString();
             this.logger.debug(newData.toString());
+
             await this.client.updateCalendarObject({ calendarObject: existingAppointment.calendarObject });
         } else {
             throw new Error("Update works for calendar objects only!");
