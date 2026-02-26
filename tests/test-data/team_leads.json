@@ -1,0 +1,30 @@
+{
+  "VR": [
+    {
+      "fullName": "Test Coach VR",
+      "teamName": "Test Team VR",
+      "ageClass": "Herren",
+      "email": "coach.vr@test.local"
+    },
+    {
+      "fullName": "Second Coach VR",
+      "teamName": "Test Team VR II",
+      "ageClass": "Damen",
+      "email": "coach2.vr@test.local"
+    }
+  ],
+  "RR": [
+    {
+      "fullName": "Test Coach RR",
+      "teamName": "Test Team RR",
+      "ageClass": "Herren",
+      "email": "coach.rr@test.local"
+    },
+    {
+      "fullName": "Second Coach RR",
+      "teamName": "Test Team RR II",
+      "ageClass": "Damen",
+      "email": "coach2.rr@test.local"
+    }
+  ]
+}

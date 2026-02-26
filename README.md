@@ -55,6 +55,29 @@ Command line parameters (mutually exclusive):
 ### planned
 - set the organizer of the appointment to the team lead
 
+## Testing
+
+### Running Unit Tests
+```bash
+npm test
+```
+
+### Running Infrastructure Tests with CalDAV Server
+
+The project includes infrastructure tests that validate the `CalDavCalendarServiceImpl` against a real CalDAV server. For detailed instructions on running these tests, see [CALDAV_INFRA_TEST.md](./CALDAV_INFRA_TEST.md).
+
+**Quick Start:**
+```bash
+# Using Docker/Podman with automatic server management
+./run-caldav-tests.sh test
+
+# Or manually with custom CalDAV server
+CALDAV_URL="http://your-server/path/" \
+CALDAV_USERNAME="user" \
+CALDAV_PASSWORD="pass" \
+npm test -- tests/adapter/service/CalDavCalendarServiceImpl.infra.spec.ts
+```
+
 ## Architecture & Services
 
 ### WebPageService
