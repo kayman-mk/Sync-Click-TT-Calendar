@@ -31,6 +31,7 @@ describe('LoggerImpl.InfraTest', () => {
         logger = new LoggerImpl(captureTransport);
     });
 
+
     describe('logging with Winston transport', () => {
         it('should_write_to_transport_when_error_is_called', () => {
             // when
