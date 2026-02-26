@@ -42,10 +42,14 @@ export class CdiContainer {
         this.container.bind<CalendarService>(SERVICE_IDENTIFIER.CalendarService).to(CalDavCalendarServiceImpl).inSingletonScope();
         this.container.bind<FileStorageService>(SERVICE_IDENTIFIER.FileStorageService).to(LocalFileStorageServiceImpl).inSingletonScope();
         this.container.bind<SportsHallRepository>(SERVICE_IDENTIFIER.SportsHallRepository).to(FileSportsHallRepositoryImpl).inSingletonScope();
-        this.container.bind<TeamLeadRepository>(SERVICE_IDENTIFIER.TeamLeadRepository).to(FileTeamLeadRepositoryImpl).inSingletonScope();
+        this.container.bind<LoggerImpl>(SERVICE_IDENTIFIER.Logger).toConstantValue(new LoggerImpl(new winston.transports.Console()));
+        this.container.bind<TeamLeadRepository>(SERVICE_IDENTIFIER.TeamLeadRepository).toDynamicValue((context) => {
+            const fileStorageService = context.container.get<FileStorageService>(SERVICE_IDENTIFIER.FileStorageService);
+            const logger = context.container.get<LoggerImpl>(SERVICE_IDENTIFIER.Logger);
+            return new FileTeamLeadRepositoryImpl(fileStorageService, logger);
+        }).inSingletonScope();
         this.container.bind<WebPageService>(SERVICE_IDENTIFIER.WebPageService).to(AxiosWebPageService).inSingletonScope();
         this.container.bind<SportsHallRemoteService>(SERVICE_IDENTIFIER.SportsHallRemoteService).to(HttpSportsHallRemoteService).inSingletonScope();
-        this.container.bind<LoggerImpl>(SERVICE_IDENTIFIER.Logger).toConstantValue(new LoggerImpl(new winston.transports.Console()));
     }
 
     getService<T>(serviceIdentifier: symbol): T {

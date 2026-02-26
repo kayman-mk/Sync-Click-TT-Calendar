@@ -25,6 +25,7 @@ describe('CDI Container', () => {
         expect(container.getService(SERVICE_IDENTIFIER.CalendarService)).toBeInstanceOf(CalDavCalendarServiceImpl)
         expect(container.getService(SERVICE_IDENTIFIER.FileStorageService)).toBeInstanceOf(LocalFileStorageServiceImpl)
         expect(container.getService(SERVICE_IDENTIFIER.Logger)).toBeInstanceOf(LoggerImpl)
+        expect(container.getService(SERVICE_IDENTIFIER.TeamLeadRepository)).toBeDefined()
     })
 
     it('should create a CDI container', () => {
