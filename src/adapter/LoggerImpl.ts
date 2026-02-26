@@ -1,10 +1,11 @@
 
 import { injectable } from 'inversify';
 import winston, { format } from 'winston';
+import { Logger } from '../domain/service/Logger';
 
 @injectable()
-export class LoggerImpl {
-    private logger: winston.Logger;
+export class LoggerImpl implements Logger {
+    private readonly logger: winston.Logger;
 
     constructor(transport: winston.transport) {
         this.logger = winston.createLogger({

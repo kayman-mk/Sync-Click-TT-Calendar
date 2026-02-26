@@ -1,7 +1,7 @@
 import { ZoneId } from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
-import { LoggerImpl } from "../adapter/LoggerImpl";
+import { Logger } from "../domain/service/Logger";
 import { SERVICE_IDENTIFIER } from "../dependency_injection";
 import { Appointment, AppointmentInterface } from "../domain/model/Appointment";
 import { AppointmentParserService } from "../domain/service/AppointmentParserService";
@@ -18,7 +18,7 @@ export class SyncCalendarApplicationService {
         @inject(SERVICE_IDENTIFIER.AppointmentParserService) readonly appointmentParserService: AppointmentParserService,
         @inject(SERVICE_IDENTIFIER.CalendarService) readonly calendarService: CalendarService,
         @inject(SERVICE_IDENTIFIER.FileStorageService) readonly fileStorageService: FileStorageService,
-        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl,
+        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger,
         @inject(SERVICE_IDENTIFIER.SportsHallRepository) readonly sportsHallRepository: SportsHallRepository
     ) { }
 

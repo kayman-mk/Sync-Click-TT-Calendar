@@ -3,7 +3,7 @@ import { AppointmentFactory, AppointmentInterface } from "../../domain/model/App
 import { AppointmentParserService } from "../../domain/service/AppointmentParserService";
 import { inject, injectable } from 'inversify';
 import { SERVICE_IDENTIFIER, CONFIGURATION } from '../../dependency_injection';
-import { LoggerImpl } from '../LoggerImpl';
+import { Logger } from '../../domain/service/Logger';
 import { FileStorageService } from '../../domain/service/FileStorageService';
 import { TeamLeadRepository } from '../../domain/service/TeamLeadRepository';
 import { TeamLead } from '../../domain/model/TeamLead';
@@ -60,7 +60,7 @@ type ClickTtCsvFile = {
 export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentParserService {
     constructor(
         @inject(SERVICE_IDENTIFIER.FileStorageService) readonly fileStorageService: FileStorageService,
-        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: LoggerImpl,
+        @inject(SERVICE_IDENTIFIER.Logger) readonly logger: Logger,
         @inject(SERVICE_IDENTIFIER.TeamLeadRepository) readonly teamLeadRepository: TeamLeadRepository,
         @inject(CONFIGURATION.ClubName) readonly clubName: string
     ) { }
