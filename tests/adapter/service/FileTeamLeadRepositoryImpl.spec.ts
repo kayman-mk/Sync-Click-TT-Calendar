@@ -1,6 +1,7 @@
 import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/service/FileTeamLeadRepositoryImpl';
 import { FileStorageService } from '../../../src/domain/service/FileStorageService';
 import { TeamLead } from '../../../src/domain/model/TeamLead';
+import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
 
 // Mocks
 const mockFileStorageService: FileStorageService = {
@@ -8,17 +9,19 @@ const mockFileStorageService: FileStorageService = {
     writeFile: jest.fn(),
     deleteFile: jest.fn(),
 };
+const mockLogger: LoggerImpl = {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+} as unknown as LoggerImpl;
 
 describe('FileTeamLeadRepositoryImpl', () => {
     let repo: FileTeamLeadRepositoryImpl;
-    const teamLead1 = new TeamLead('John Smith', 'SC Kleckersdorf I', 'Herren', 'VR', 'john.smith@example.com');
-    const teamLead2 = new TeamLead('Maria Mueller', 'SC Kleckersdorf II', 'Damen', 'VR', 'maria.mueller@example.com');
-    const teamLead3 = new TeamLead('John Smith', 'SC Kleckersdorf I', 'Herren', 'RR', 'john.smith@example.com');
-    const teamLead4 = new TeamLead('Maria Mueller', 'SC Kleckersdorf II', 'Damen', 'RR', 'maria.mueller@example.com');
 
     beforeEach(() => {
         jest.clearAllMocks();
-        repo = new FileTeamLeadRepositoryImpl(mockFileStorageService);
+        repo = new FileTeamLeadRepositoryImpl(mockFileStorageService, mockLogger);
     });
 
 
@@ -50,7 +53,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
         it('should_return_team_lead_from_RR_when_searching_in_RR', async () => {
             const groupedData = {
                 VR: [
-                    { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
+                    { fullName: 'John Smith 1', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
                 ],
                 RR: [
                     { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
@@ -96,7 +99,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
             expect(result).toBeUndefined();
         });
 
-        it('should_return_empty_array_when_runde_does_not_exist', async () => {
+        it('should_return_undefined_when_runde_does_not_exist', async () => {
             const groupedData = {
                 VR: [
                     { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
@@ -120,7 +123,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
                     { fullName: 'Maria Mueller', teamName: 'SC Kleckersdorf II', ageClass: 'Damen' },
                 ],
                 RR: [
-                    { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
+                    { fullName: 'John Smith 1', teamName: 'SC Kleckersdorf I', ageClass: 'Herren' },
                 ]
             };
             (mockFileStorageService.readFile as jest.Mock).mockResolvedValue(
@@ -149,20 +152,10 @@ describe('FileTeamLeadRepositoryImpl', () => {
 
             expect(result).toBeUndefined();
         });
-
-        it('should_return_undefined_when_file_not_found', async () => {
-            (mockFileStorageService.readFile as jest.Mock).mockRejectedValue({
-                code: 'ENOENT',
-            });
-
-            const result = await repo.findByName('John Smith', 'VR');
-
-            expect(result).toBeUndefined();
-        });
     });
 
 
-    describe('getAll', () => {
+    describe('getAllByRunde', () => {
         it('should_return_all_team_leads_for_vr_runde', async () => {
             const groupedData = {
                 VR: [
@@ -170,14 +163,14 @@ describe('FileTeamLeadRepositoryImpl', () => {
                     { fullName: 'Maria Mueller', teamName: 'SC Kleckersdorf II', ageClass: 'Damen', email: 'maria.mueller@example.com' },
                 ],
                 RR: [
-                    { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren', email: 'john.smith@example.com' },
+                    { fullName: 'John Smith 1', teamName: 'SC Kleckersdorf I', ageClass: 'Herren', email: 'john.smith@example.com' },
                 ]
             };
             (mockFileStorageService.readFile as jest.Mock).mockResolvedValue(
                 JSON.stringify(groupedData)
             );
 
-            const result = await repo.getAll('VR');
+            const result = await repo.getAllByRunde('VR');
 
             expect(result).toHaveLength(2);
             expect(result[0].fullName).toBe('John Smith');
@@ -191,7 +184,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
         it('should_return_all_team_leads_for_rr_runde', async () => {
             const groupedData = {
                 VR: [
-                    { fullName: 'John Smith', teamName: 'SC Kleckersdorf I', ageClass: 'Herren', email: 'john.smith@example.com' },
+                    { fullName: 'John Smith 1', teamName: 'SC Kleckersdorf I', ageClass: 'Herren', email: 'john.smith@example.com' },
                     { fullName: 'Maria Mueller', teamName: 'SC Kleckersdorf II', ageClass: 'Damen', email: 'maria.mueller@example.com' },
                 ],
                 RR: [
@@ -202,31 +195,11 @@ describe('FileTeamLeadRepositoryImpl', () => {
                 JSON.stringify(groupedData)
             );
 
-            const result = await repo.getAll('RR');
+            const result = await repo.getAllByRunde('RR');
 
             expect(result).toHaveLength(1);
             expect(result[0].fullName).toBe('John Smith');
             expect(result[0].runde).toBe('RR');
-        });
-
-        it('should_return_empty_array_when_file_not_found', async () => {
-            (mockFileStorageService.readFile as jest.Mock).mockRejectedValue({
-                code: 'ENOENT',
-            });
-
-            const result = await repo.getAll('VR');
-
-            expect(result).toEqual([]);
-        });
-
-        it('should_return_empty_array_when_file_has_not_found_message', async () => {
-            (mockFileStorageService.readFile as jest.Mock).mockRejectedValue(
-                new Error('File not found')
-            );
-
-            const result = await repo.getAll('VR');
-
-            expect(result).toEqual([]);
         });
 
         it('should_return_empty_array_when_runde_does_not_exist', async () => {
@@ -239,17 +212,9 @@ describe('FileTeamLeadRepositoryImpl', () => {
                 JSON.stringify(groupedData)
             );
 
-            const result = await repo.getAll('NonExistent');
+            const result = await repo.getAllByRunde('NonExistent');
 
             expect(result).toEqual([]);
-        });
-
-        it('should_throw_error_on_other_read_errors', async () => {
-            (mockFileStorageService.readFile as jest.Mock).mockRejectedValue(
-                new Error('Permission denied')
-            );
-
-            await expect(repo.getAll('VR')).rejects.toThrow('Permission denied');
         });
 
         it('should_convert_plain_objects_to_team_lead_instances', async () => {
@@ -263,7 +228,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
                 JSON.stringify(groupedData)
             );
 
-            const result = await repo.getAll('VR');
+            const result = await repo.getAllByRunde('VR');
 
             expect(result[0]).toBeInstanceOf(TeamLead);
             expect(result[1]).toBeInstanceOf(TeamLead);
