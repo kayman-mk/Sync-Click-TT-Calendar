@@ -107,7 +107,7 @@ export class ClickTtCsvFileAppointmentParserServiceImpl implements AppointmentPa
                             try {
                                 const startDateTime = LocalDateTime.parse(cleanedTermin, csvDateTimeFormatter)
                                 if (data.GastVereinName != 'spielfrei') {
-                                    const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName + ", " + data.HalleStrasse + ", " + data.HallePLZ + " " + data.HalleOrt : '';
+                                    const location = data.HalleName || data.HalleStrasse || data.HallePLZ || data.HalleOrt ? data.HalleName?.trim() + ", " + data.HalleStrasse?.trim() + ", " + data.HallePLZ?.trim() + " " + data.HalleOrt?.trim() : '';
                                     const isCup = data.Runde == 'Pokal'
 
                                     // Look up team lead for the home team with age class and round
