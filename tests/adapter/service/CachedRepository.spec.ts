@@ -1,5 +1,4 @@
 import { FileCachedRepository } from '../../../src/adapter/service/CachedRepository';
-import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
 
 // Simple entity for testing
 interface TestEntity {
@@ -44,17 +43,17 @@ describe('FileCachedRepository', () => {
     let repo: TestFileCachedRepository;
     let storage: MockFileStorage;
     let logger: MockLogger;
-    const fileName = 'test.json';
+    const filePath = '/test/path/test.json';
 
     beforeEach(() => {
         storage = new MockFileStorage();
         logger = new MockLogger();
         // @ts-ignore: LoggerImpl type
-        repo = new TestFileCachedRepository(fileName, storage, logger);
+        repo = new TestFileCachedRepository(filePath, storage, logger);
     });
 
     it('should read from file only once and cache result', async () => {
-        storage.files[fileName] = JSON.stringify([{ id: 1, value: 'a' }]);
+        storage.files[filePath] = JSON.stringify([{ id: 1, value: 'a' }]);
         const first = await repo.getAll();
         const second = await repo.getAll();
         expect(first).toEqual([{ id: 1, value: 'a' }]);
@@ -63,36 +62,36 @@ describe('FileCachedRepository', () => {
     });
 
     it('should only read once for concurrent getAll calls', async () => {
-        storage.files[fileName] = JSON.stringify([{ id: 2, value: 'b' }]);
+        storage.files[filePath] = JSON.stringify([{ id: 2, value: 'b' }]);
         const [a, b] = await Promise.all([repo.getAll(), repo.getAll()]);
         expect(a).toEqual(b);
         expect(storage.readCount).toBe(1);
     });
 
     it('should serialize and deserialize entities', async () => {
-        storage.files[fileName] = JSON.stringify([{ id: 3, value: 'c' }]);
+        storage.files[filePath] = JSON.stringify([{ id: 3, value: 'c' }]);
         const all = await repo.getAll();
         expect(all).toEqual([{ id: 3, value: 'c' }]);
         await repo.save({ id: 4, value: 'd' });
-        expect(JSON.parse(storage.files[fileName])).toContainEqual({ id: 4, value: 'd' });
+        expect(JSON.parse(storage.files[filePath])).toContainEqual({ id: 4, value: 'd' });
     });
 
     it('should update existing entity by primary key', async () => {
-        storage.files[fileName] = JSON.stringify([{ id: 5, value: 'e' }]);
+        storage.files[filePath] = JSON.stringify([{ id: 5, value: 'e' }]);
         await repo.getAll();
         await repo.save({ id: 5, value: 'updated' });
-        expect(JSON.parse(storage.files[fileName])).toContainEqual({ id: 5, value: 'updated' });
+        expect(JSON.parse(storage.files[filePath])).toContainEqual({ id: 5, value: 'updated' });
     });
 
     it('should queue saves and not lose updates', async () => {
-        storage.files[fileName] = JSON.stringify([]);
+        storage.files[filePath] = JSON.stringify([]);
         await repo.getAll();
         await Promise.all([
             repo.save({ id: 6, value: 'x' }),
             repo.save({ id: 7, value: 'y' }),
             repo.save({ id: 6, value: 'z' })
         ]);
-        const result = JSON.parse(storage.files[fileName]);
+        const result = JSON.parse(storage.files[filePath]);
         expect(result).toContainEqual({ id: 6, value: 'z' });
         expect(result).toContainEqual({ id: 7, value: 'y' });
         // Ensure no stale intermediate state remains and only distinct IDs are present
@@ -117,6 +116,6 @@ describe('FileCachedRepository', () => {
         storage.writeFile = MockFileStorage.prototype.writeFile;
         await repo.save({ id: 9, value: 'ok' });
         expect(logger.errors.some((msg: string) => msg.includes('Failed to save entity'))).toBe(true);
-        expect(JSON.parse(storage.files[fileName])).toContainEqual({ id: 9, value: 'ok' });
+        expect(JSON.parse(storage.files[filePath])).toContainEqual({ id: 9, value: 'ok' });
     });
 });

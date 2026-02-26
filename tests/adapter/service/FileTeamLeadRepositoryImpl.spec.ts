@@ -21,7 +21,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        repo = new FileTeamLeadRepositoryImpl(mockFileStorageService, mockLogger);
+        repo = new FileTeamLeadRepositoryImpl('/test/path/team_leads.json', mockFileStorageService, mockLogger);
     });
 
 

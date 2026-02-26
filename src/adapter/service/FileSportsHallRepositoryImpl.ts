@@ -19,11 +19,12 @@ export class FileSportsHallRepositoryImpl extends FileCachedRepository<SportsHal
     }
 
     constructor(
+        filePath: string,
         @inject(SERVICE_IDENTIFIER.FileStorageService) fileStorageService: FileStorageService,
         @inject(SERVICE_IDENTIFIER.SportsHallRemoteService) private readonly sportsHallRemoteService: SportsHallRemoteService,
         @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl
     ) {
-        super("sports_halls.json", fileStorageService, logger);
+        super(filePath, fileStorageService, logger);
     }
 
     protected isSamePrimaryKey(a: SportsHall, b: SportsHall): boolean {

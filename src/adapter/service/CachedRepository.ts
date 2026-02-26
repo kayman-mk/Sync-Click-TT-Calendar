@@ -4,6 +4,9 @@ import { LoggerImpl } from "../LoggerImpl";
 /**
  * Abstract concurrency-safe, cached repository for any entity type.
  * Handles caching, concurrent async reads, and serializes writes.
+ *
+ * The filePath must be an absolute path to ensure consistent behavior regardless
+ * of the current working directory.
  */
 @injectable()
 export abstract class FileCachedRepository<T> {
@@ -12,7 +15,7 @@ export abstract class FileCachedRepository<T> {
     private saveQueue: Promise<void> = Promise.resolve();
 
     constructor(
-        protected readonly fileName: string,
+        protected readonly filePath: string,
         protected readonly fileStorageService: { readFile: (file: string) => Promise<string>; writeFile: (file: string, content: string) => Promise<void> },
         protected readonly logger: LoggerImpl
     ) {}
@@ -46,13 +49,13 @@ export abstract class FileCachedRepository<T> {
         this.cachePromise = (async () => {
             let entities: T[];
             try {
-                const content = await this.fileStorageService.readFile(this.fileName);
+                const content = await this.fileStorageService.readFile(this.filePath);
                 entities = this.deserialize(content);
             } catch (err: any) {
                 if (err && (err.code === 'ENOENT' || err.message?.includes('not found'))) {
                     entities = [];
                 } else {
-                    this.logger.error(`Error reading file ${this.fileName}: ${err}`);
+                    this.logger.error(`Error reading file ${this.filePath}: ${err}`);
                     throw err;
                 }
             }
@@ -77,7 +80,7 @@ export abstract class FileCachedRepository<T> {
             } catch (err) {
                 const errorMessage = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
                 this.logger.error(
-                    `Failed to save entity to ${this.fileName}. Entity: ${JSON.stringify(entity)}. Error: ${errorMessage}`
+                    `Failed to save entity to ${this.filePath}. Entity: ${JSON.stringify(entity)}. Error: ${errorMessage}`
                 );
                 // Do not rethrow, so the queue continues
             }
@@ -86,7 +89,7 @@ export abstract class FileCachedRepository<T> {
     }
 
     protected async saveToFile(entities: T[]): Promise<void> {
-        await this.fileStorageService.writeFile(this.fileName, this.serialize(entities));
+        await this.fileStorageService.writeFile(this.filePath, this.serialize(entities));
         this.cachedEntities = entities;
         this.cachePromise = undefined;
     }

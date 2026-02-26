@@ -13,10 +13,11 @@ import { FileCachedRepository } from "./CachedRepository";
 @injectable()
 export class FileTeamLeadRepositoryImpl extends FileCachedRepository<TeamLead> implements TeamLeadRepository {
     constructor(
+        filePath: string,
         @inject(SERVICE_IDENTIFIER.FileStorageService) fileStorageService: FileStorageService,
         @inject(SERVICE_IDENTIFIER.Logger) logger: LoggerImpl
     ) {
-        super("team_leads.json", fileStorageService, logger);
+        super(filePath, fileStorageService, logger);
     }
 
     protected isSamePrimaryKey(a: TeamLead, b: TeamLead): boolean {
