@@ -3,6 +3,7 @@ import { SportsHall } from "../../domain/model/SportsHall";
 import { Club } from "../../domain/model/Club";
 import { SportsHallRemoteService } from "../../domain/service/SportsHallRemoteService";
 import { WebPageService } from "../../domain/service/WebPageService";
+import { Logger } from "../../domain/service/Logger";
 import { SERVICE_IDENTIFIER } from "../../dependency_injection";
 import * as cheerio from "cheerio";
 
@@ -13,7 +14,8 @@ import * as cheerio from "cheerio";
 @injectable()
 export class HttpSportsHallRemoteService implements SportsHallRemoteService {
     constructor(
-        @inject(SERVICE_IDENTIFIER.WebPageService) private readonly webPageService: WebPageService
+        @inject(SERVICE_IDENTIFIER.WebPageService) private readonly webPageService: WebPageService,
+        @inject(SERVICE_IDENTIFIER.Logger) private readonly logger: Logger
     ) {}
 
     async fetchSportsHalls(club: Club): Promise<SportsHall[]> {
@@ -25,7 +27,7 @@ export class HttpSportsHallRemoteService implements SportsHallRemoteService {
             const adressenSection = $("h2").filter((_, el) => $(el).text().trim() === "Adressen").parent();
             if (!adressenSection.length) {
                 // Adressen section not found in HTML, log and return empty array
-                console.error("Adressen section not found in HTML");
+                this.logger.error("Adressen section not found in HTML");
                 return [];
             }
             // Only search for Spiellokal blocks within the Adressen section
@@ -69,7 +71,7 @@ export class HttpSportsHallRemoteService implements SportsHallRemoteService {
             return halls;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            console.error(`Failed to fetch sports halls from ${club.url}/info: ${errorMessage}`);
+            this.logger.error(`Failed to fetch sports halls from ${club.url}/info: ${errorMessage}`);
             throw err;
         }
     }
