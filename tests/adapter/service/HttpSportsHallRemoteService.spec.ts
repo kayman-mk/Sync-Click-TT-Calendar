@@ -1,17 +1,20 @@
 import { HttpSportsHallRemoteService } from '../../../src/adapter/service/HttpSportsHallRemoteService';
 import { Club } from '../../../src/domain/model/Club';
 import { WebPageService } from '../../../src/domain/service/WebPageService';
+import { MockLogger } from '../../test-utils/MockLogger';
 
 describe('HttpSportsHallRemoteService', () => {
     let service: HttpSportsHallRemoteService;
     let mockWebPageService: jest.Mocked<WebPageService>;
+    let mockLogger: MockLogger;
     const club: Club = { name: 'Test Club', url: 'http://testclub.de' } as Club;
 
     beforeEach(() => {
         mockWebPageService = {
             fetchPage: jest.fn(),
         };
-        service = new HttpSportsHallRemoteService(mockWebPageService);
+        mockLogger = new MockLogger();
+        service = new HttpSportsHallRemoteService(mockWebPageService, mockLogger);
     });
 
     it('should_parse_street_and_house_number_correctly_when_both_are_present', async () => {
@@ -45,6 +48,7 @@ describe('HttpSportsHallRemoteService', () => {
         const result = await service.fetchSportsHalls(club);
 
         expect(result).toEqual([]);
+        expect(mockLogger.errors).toContain("Adressen section not found in HTML");
     });
 
     it('should_call_web_page_service_with_correct_url', async () => {
@@ -61,6 +65,7 @@ describe('HttpSportsHallRemoteService', () => {
         mockWebPageService.fetchPage.mockRejectedValueOnce(error);
 
         await expect(service.fetchSportsHalls(club)).rejects.toThrow('Network error');
+        expect(mockLogger.errors).toContain(`Failed to fetch sports halls from ${club.url}/info: Network error`);
     });
 
     it('should_parse_multiple_sports_halls_correctly', async () => {
