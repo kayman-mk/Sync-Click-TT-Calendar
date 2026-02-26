@@ -3,16 +3,16 @@ import { LocalFileStorageServiceImpl } from '../../../src/adapter/service/LocalF
 import { HttpSportsHallRemoteService } from '../../../src/adapter/service/HttpSportsHallRemoteService';
 import { SportsHall } from '../../../src/domain/model/SportsHall';
 import { Club } from '../../../src/domain/model/Club';
-import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
+import { Logger } from '../../../src/domain/service/Logger';
+import { MockLogger } from '../../test-utils/MockLogger';
 import * as fs from 'fs';
 import * as path from 'path';
-import winston from 'winston';
 
 describe('FileSportsHallRepositoryImpl', () => {
     let repo: FileSportsHallRepositoryImpl;
     let storageService: LocalFileStorageServiceImpl;
     let remoteService: HttpSportsHallRemoteService;
-    let infraLogger: LoggerImpl;
+    let infraLogger: Logger;
 
     const testDataDir = path.join(__dirname, '../../../target/test-data');
     const testFilePath = path.join(testDataDir, 'sports_halls.json');
@@ -65,11 +65,7 @@ describe('FileSportsHallRepositoryImpl', () => {
         } as unknown as HttpSportsHallRemoteService;
 
         // Create logger
-        infraLogger = new LoggerImpl(
-            winston.createLogger({
-                transports: [new winston.transports.Console({ silent: true })],
-            })
-        );
+        infraLogger = new MockLogger();
     });
 
     beforeEach(() => {

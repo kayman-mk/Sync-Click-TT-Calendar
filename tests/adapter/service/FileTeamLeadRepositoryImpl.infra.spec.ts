@@ -1,14 +1,14 @@
 import { FileTeamLeadRepositoryImpl } from '../../../src/adapter/service/FileTeamLeadRepositoryImpl';
 import { LocalFileStorageServiceImpl } from '../../../src/adapter/service/LocalFileStorageServiceImpl';
-import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
+import { Logger } from '../../../src/domain/service/Logger';
+import { MockLogger } from '../../test-utils/MockLogger';
 import * as fs from 'fs';
 import * as path from 'path';
-import winston from 'winston';
 
 describe('FileTeamLeadRepositoryImpl', () => {
     let repo: FileTeamLeadRepositoryImpl;
     let storageService: LocalFileStorageServiceImpl;
-    let infraLogger: LoggerImpl;
+    let infraLogger: Logger;
 
     const testDataDir = path.join(__dirname, '../../../target/test-data');
     const testFilePath = path.join(testDataDir, 'team_leads.json');
@@ -51,11 +51,7 @@ describe('FileTeamLeadRepositoryImpl', () => {
         storageService = new LocalFileStorageServiceImpl();
 
         // Create logger
-        infraLogger = new LoggerImpl(
-            winston.createLogger({
-                transports: [new winston.transports.Console({ silent: true })],
-            })
-        );
+        infraLogger = new MockLogger();
     });
 
     beforeEach(() => {

@@ -3,7 +3,7 @@ import { FileStorageService } from '../../../src/domain/service/FileStorageServi
 import { SportsHallRemoteService } from '../../../src/domain/service/SportsHallRemoteService';
 import { SportsHall } from '../../../src/domain/model/SportsHall';
 import { Club } from "../../../src/domain/model/Club";
-import { LoggerImpl } from '../../../src/adapter/LoggerImpl';
+import { MockLogger } from '../../test-utils/MockLogger';
 
 // Mocks
 const mockFileStorageService: FileStorageService = {
@@ -14,12 +14,7 @@ const mockFileStorageService: FileStorageService = {
 const mockRemoteService: SportsHallRemoteService = {
     fetchSportsHalls: jest.fn(),
 };
-const mockLogger: LoggerImpl = {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-} as unknown as LoggerImpl;
+const mockLogger = new MockLogger();
 
 describe('FileSportsHallRepositoryImpl', () => {
     let repo: FileSportsHallRepositoryImpl;

@@ -24,6 +24,8 @@ class TestStringTransport extends Transport {
 };
 
 describe('Logger', () => {
+    // LoggerImpl is intentionally instantiated here because this test suite
+    // is specifically testing the LoggerImpl adapter implementation
     const loggerOutput = new TestStringTransport()
     const logger = new LoggerImpl(loggerOutput)
 
