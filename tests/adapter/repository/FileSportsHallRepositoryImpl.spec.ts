@@ -1,4 +1,4 @@
-import { FileSportsHallRepositoryImpl } from '../../../src/adapter/service/FileSportsHallRepositoryImpl';
+import { FileSportsHallRepositoryImpl } from '../../../src/adapter/repository/FileSportsHallRepositoryImpl';
 import { FileStorageService } from '../../../src/domain/service/FileStorageService';
 import { SportsHallRemoteService } from '../../../src/domain/service/SportsHallRemoteService';
 import { SportsHall } from '../../../src/domain/model/SportsHall';
