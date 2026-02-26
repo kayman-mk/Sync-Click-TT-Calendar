@@ -46,7 +46,7 @@
     "ical.js": "2.2.1",
     "ics": "3.8.1",
     "inversify": "6.0.1",
-    "reflect-metadata": "0.1.13",
+    "reflect-metadata": "0.2.2",
     "tsdav": "2.0.3",
     "uuid": "9.0.1",
     "winston": "3.8.2",
