@@ -31,6 +31,7 @@ export class FileSportsHallRepositoryImpl extends FileCachedRepository<SportsHal
         return FileSportsHallRepositoryImpl.isSamePrimaryKeyImpl(a, b);
     }
 
+
     async find(key: SportsHallKey, club: Club): Promise<SportsHall | undefined> {
         const sportsHalls = await this.getAll();
         let hall = sportsHalls.find(hall => FileSportsHallRepositoryImpl.isSamePrimaryKeyImpl(hall, key));

@@ -134,4 +134,13 @@ describe('Parse Click-TT CSV file', () => {
             expect(actualAppointments.size).toEqual(0);
         })
     });
+
+    it('should_trim_leading_spaces_from_location_fields', () => {
+        const csvWithLeadingSpaces = `Termin;Staffel;Runde;HeimMannschaft;HalleStrasse;HalleOrt;HallePLZ;HalleName;GastVereinName;GastMannschaft;BegegnungNr;Altersklasse\n10.10.2022 11:45;3. KK West;VR;VfL Hamburg; Lübecker Straße 4; Lübeck; 23456; Holstenhalle;SC Lübeck;SC Lübeck III;2;Herren`;
+        const parser = new ClickTtCsvFileAppointmentParserServiceImpl(new TestFileStorageService(csvWithLeadingSpaces), new TestLogger(), new TestTeamLeadRepository(), "SC Kleckersdorf")
+        return parser.parseAppointments("abc.csv").then(actualAppointments => {
+            const actualAppointment = actualAppointments.values().next().value
+            expect(actualAppointment.location).toEqual("Holstenhalle, Lübecker Straße 4, 23456 Lübeck");
+        })
+    });
 })
