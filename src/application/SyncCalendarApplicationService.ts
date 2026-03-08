@@ -1,4 +1,4 @@
-import { ZoneId } from "@js-joda/core";
+import {LocalDateTime, ZoneId} from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
 import { Logger } from "../domain/service/Logger";
@@ -11,6 +11,7 @@ import * as cheerio from "cheerio";
 import { SportsHallRepository } from "../domain/service/SportsHallRepository";
 import { Team } from "../domain/model/Team";
 import {Club} from "../domain/model/Club";
+import axios from "axios";
 
 @injectable()
 export class SyncCalendarApplicationService {
@@ -207,11 +208,15 @@ export class SyncCalendarApplicationService {
 
         for (let index = 0; index < createAppointments.length; index++) {
             this.logger.info("Creating appointment in calendar: " + createAppointments[index].title + " at " + createAppointments[index].startDateTime);
-            await this.calendarService.createAppointment(createAppointments[index]);
+            if (createAppointments[index].startDateTime.isAfter(LocalDateTime.now())) {
+                await this.calendarService.createAppointment(createAppointments[index]);
+            }
         }
 
         for (let entry of updateAppointments) {
-            await this.calendarService.updateAppointment(entry[0], entry[1]);
+            if (entry[1].startDateTime.isAfter(LocalDateTime.now())) {
+                await this.calendarService.updateAppointment(entry[0], entry[1]);
+            }
         }
     }
 
