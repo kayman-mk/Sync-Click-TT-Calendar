@@ -208,9 +208,7 @@ export class SyncCalendarApplicationService {
 
         for (let index = 0; index < createAppointments.length; index++) {
             this.logger.info("Creating appointment in calendar: " + createAppointments[index].title + " at " + createAppointments[index].startDateTime);
-            if (createAppointments[index].startDateTime.isAfter(LocalDateTime.now())) {
-                await this.calendarService.createAppointment(createAppointments[index]);
-            }
+            await this.calendarService.createAppointment(createAppointments[index]);
         }
 
         for (let entry of updateAppointments) {

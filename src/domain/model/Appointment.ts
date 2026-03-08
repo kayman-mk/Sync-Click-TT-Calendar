@@ -77,6 +77,9 @@ export class Appointment implements AppointmentInterface {
 
         if (this.teamLead.fullName != compareTo.teamLead.fullName) differences.push(`teamLead: "${this.teamLead.fullName}" != "${compareTo.teamLead.fullName}"`);
 
+        if (differences.length > 0) {
+            console.log(`Appointments with id "${this.id}" differ in the following fields:\n- ${differences.join('\n- ')}`);
+        }
         return differences.length == 0;
     }
 
@@ -85,7 +88,7 @@ export class Appointment implements AppointmentInterface {
      * Includes key fields for easy identification and debugging.
      */
     toString(): string {
-        return `Appointment(title="${this.title}", startDateTime="${this.startDateTime}", id="${this.id}", location="${this.location}", isCup=${this.isCup}, ageClass="${this.ageClass}", categories=[${Array.from(this.categories).join(', ')}])`;
+        return `Appointment(title="${this.title}", startDateTime="${this.startDateTime}", id="${this.id}", location="${this.location}", isCup=${this.isCup}, ageClass="${this.ageClass}", teamLead="${this.teamLead.fullName}", categories=[${Array.from(this.categories).join(', ')}])`;
     }
 
     get description(): string {
