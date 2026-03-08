@@ -113,15 +113,15 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
                 if (startDateTimeFound && startDateTime.isAfter(minimumDateTime.toLocalDateTime().minusMonths(1)) && startDateTime.isBefore(maximumDateTime.toLocalDateTime().plusMonths(1))) {
                     const summary = vevent.getFirstPropertyValue('summary');
-                    const categories: string[] = vevent.getAllProperties('categories').map((category: { getFirstValue: () => any; }) => category.getFirstValue());
+                    const categoriesArray: string[] = vevent.getAllProperties('categories').map((category: { getFirstValue: () => any; }) => category.getFirstValue());
+                    const categories: Set<string> = new Set(categoriesArray);
 
                     if (Appointment.isFromClickTT(categories)) {
                         // read the team lead from the organizer property if available. use the repository to find the team lead by name
                         let teamLead: TeamLead | undefined = undefined;
-                        const organizer = vevent.getFirstPropertyValue('organizer');
-                        if (organizer) {
-                            // add email to model. this is the mail address prefixed with "mailto:" in the organizer property. we can use this to uniquely identify the team lead, as the name might not be unique
-                            const organizerName = organizer.replace(/.*CN=([^;]+).*/, '$1'); // Extract the common name (CN) from the organizer string
+                        const organizer = vevent.getAllProperties('organizer');
+                        if (organizer.length > 0 && organizer[0].getParameter('cn')) {
+                            const organizerName = organizer[0].getParameter('cn').replace(/.*CN=([^;]+).*/, '$1'); // Extract the common name (CN) from the organizer string
                             this.logger.debug(`Found organizer in calendar event: ${organizerName}`);
 
                             try {
@@ -241,7 +241,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
             title: appointment.title,
             description: appointment.description,
             location: appointment.location,
-            categories: appointment.categories,
+            categories: Array.from(appointment.categories),
             status: 'CONFIRMED',
             busyStatus: 'BUSY',
         };
@@ -297,7 +297,7 @@ class DAVAppointmentDecorator implements AppointmentInterface {
         return this.decoratedAppointment.startDateTime;
     }
 
-    get categories(): string[] {
+    get categories(): Set<string> {
         return this.decoratedAppointment.categories;
     }
 
