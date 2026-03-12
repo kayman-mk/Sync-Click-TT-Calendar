@@ -1,4 +1,4 @@
-import {LocalDateTime, ZoneId} from "@js-joda/core";
+import {ZoneId} from "@js-joda/core";
 import '@js-joda/timezone';
 import { inject, injectable } from "inversify";
 import { Logger } from "../domain/service/Logger";
@@ -27,10 +27,10 @@ export class SyncCalendarApplicationService {
         this.logger.info(`Downloading webpage from: ${clubUrl}`);
 
         // Download the webpage
-        //const response = await axios.get(clubUrl);
-        //const html = response.data;
-        const html = await this.fileStorageService.readFile('spielplan.html');
-        //this.fileStorageService.writeFile(`spielplan.html`, html);
+        const response = await axios.get(clubUrl);
+        const html = response.data;
+        //const html = await this.fileStorageService.readFile('spielplan.html');
+        this.fileStorageService.writeFile(`spielplan.html`, html);
 
         // Parse the HTML table using cheerio
         const $ = cheerio.load(html);
@@ -212,9 +212,7 @@ export class SyncCalendarApplicationService {
         }
 
         for (let entry of updateAppointments) {
-            if (entry[1].startDateTime.isAfter(LocalDateTime.now())) {
-                await this.calendarService.updateAppointment(entry[0], entry[1]);
-            }
+            await this.calendarService.updateAppointment(entry[0], entry[1]);
         }
     }
 
