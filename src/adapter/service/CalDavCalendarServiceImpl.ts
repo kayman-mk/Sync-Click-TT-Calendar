@@ -143,6 +143,7 @@ export class CalDavCalendarServiceImpl implements CalendarService {
                         } else {
                             // Create a default team lead when no organizer is present
                             teamLead = new TeamLead("Unknown", "", "", "", "");
+                            this.logger.info(`no lead: ${summary}, ${startDateTime}, ${categories}`);
                         }
 
                         const appointmentFromCalendar = new DAVAppointmentDecorator(AppointmentFactory.createFromCalendar(summary, startDateTime, vevent.getFirstPropertyValue('description'), vevent.getFirstPropertyValue('location'), categories, teamLead), calendarAppointment);
@@ -213,7 +214,15 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
             vevent.updatePropertyWithValue('title', newData.title);
             vevent.updatePropertyWithValue('description', newData.description);
-            vevent.updatePropertyWithValue('organizer', {name: newData.teamLead.fullName, email: newData.teamLead.email});
+
+            // Update organizer with proper iCalendar format (CN parameter + mailto: URI)
+            vevent.removeAllProperties('organizer');
+            if (newData.teamLead) {
+                const organizerProp = new ICAL.Property('organizer');
+                organizerProp.setValue(`mailto:${newData.teamLead.email}`);
+                organizerProp.setParameter('cn', newData.teamLead.fullName);
+                vevent.addProperty(organizerProp);
+            }
 
             vevent.updatePropertyWithValue('dtstart', iso8601Formatter.format(newData.startDateTime));
 
@@ -248,8 +257,11 @@ export class CalDavCalendarServiceImpl implements CalendarService {
 
         // Use the team lead from the appointment if available
         if (appointment.teamLead) {
-            icsEvent.organizer = { name: appointment.teamLead.fullName, email: appointment.teamLead.email };
-            this.logger.debug(`Using team lead as organizer: ${icsEvent.organizer}`);
+            icsEvent.organizer = {
+                name: appointment.teamLead.fullName,
+                email: appointment.teamLead.email
+            };
+            this.logger.debug(`Using team lead as organizer: ${appointment.teamLead.fullName} <${appointment.teamLead.email}>`);
         } else {
             this.logger.debug(`No team lead available for appointment: ${appointment.title}`);
         }
